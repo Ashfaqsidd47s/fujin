@@ -1,0 +1,63 @@
+name: Release
+
+# On every push to main, changesets either opens/updates a "Version Packages"
+# PR (when there are pending changesets) or, once that PR is merged, publishes
+# the new versions to npm.
+#
+# Publishing uses npm trusted publishing (OIDC): no NPM_TOKEN secret. Configure
+# each package on npmjs.com -> Settings -> Trusted publishing with
+#   owner: ashfaqaxe-stack, repository: fujin, workflow: release.yml,
+#   environment: npm
+# and allow direct `npm publish`. See docs/releasing.md.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency: release-${{ github.ref }}
+
+permissions:
+  contents: write # push tags, create releases
+  pull-requests: write # open the Version Packages PR
+  id-token: write # npm trusted publishing
+
+jobs:
+  release:
+    # Off until npm is set up: add the repository variable
+    # RELEASE_ENABLED=true (Settings -> Secrets and variables -> Actions).
+    if: vars.RELEASE_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    environment: npm
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+          # No registry-url: it writes an _authToken line that would shadow OIDC.
+
+      # Trusted publishing needs npm >= 11.5.1.
+      - run: npm install -g npm@^11.5.1
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Version PR or publish
+        id: changesets
+        uses: changesets/action@v1
+        with:
+          version: pnpm version-packages
+          publish: pnpm release
+          commit: "chore: version packages"
+          title: "chore: version packages"
+          createGithubReleases: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push release tags
+        if: steps.changesets.outputs.published == 'true'
+        run: git push origin --tags

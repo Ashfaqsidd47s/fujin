@@ -1,0 +1,68 @@
+---
+title: Introduction
+description: Production-ready React components you own. Full features, not primitives.
+---
+
+Fujin is a set of components, blocks and recipes you copy into your app.
+
+It is not a component library you install. There is no `@fujin/ui` package in your
+`dependencies`. You run a command, the code lands in your project, and it is yours
+to read, edit and ship.
+
+## How it is different
+
+shadcn/ui gives you excellent primitives and leaves the assembly to you. That is the
+right call for a primitive library — and it means every team rebuilds the same data
+table, the same filter bar, the same auth flow, every time.
+
+Fujin ships the assembly.
+
+<Tabs items={["shadcn/ui", "Fujin"]}>
+  <Tab value="shadcn/ui">
+    `Table` gives you `<Table>`, `<TableHeader>`, `<TableRow>`. Sorting,
+    pagination, filtering, column visibility, row selection and URL state are a
+    400-line recipe you copy from the docs and maintain yourself.
+  </Tab>
+  <Tab value="Fujin">
+    `data-table` gives you sorting, multi-column filtering, faceted filters,
+    pagination, column visibility, pinning, row selection, virtualization, CSV
+    export, URL-persisted state and a server-side mode. Wired, typed and tested.
+  </Tab>
+</Tabs>
+
+## The three ideas
+
+### 1. Logic and looks live in separate files
+
+Every component ships as a headless hook plus a presentational shell.
+
+```txt
+lib/data-table/use-data-table.ts        # state, behaviour, no classNames
+components/ui/data-table/data-table.tsx # markup, no business logic
+```
+
+Restyle the shell as much as you like. The behaviour keeps working. This is the
+rule that makes "just change the UI" actually true.
+
+### 2. Recipes install features, not files
+
+```package-install
+npx @fujin/cli@latest add auth
+```
+
+That is routes, server actions, validation schemas, session handling, the sign-in
+and sign-up screens, and the middleware — wired together and typed.
+
+### 3. Agents get a map, not a maze
+
+Every item in the registry ships structured metadata over MCP: what it is for, when
+_not_ to use it, its props, its gotchas and a working snippet. An agent spends a few
+hundred tokens learning a component instead of reading thousands of lines of source.
+
+## Get started
+
+<Cards>
+  <Card title="Installation" href="/docs/installation" />
+  <Card title="Components" href="/docs/components/button" />
+  <Card title="MCP setup" href="/docs/mcp" />
+</Cards>

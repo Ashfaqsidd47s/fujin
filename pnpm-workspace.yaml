@@ -1,0 +1,25 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+  - "templates/*"
+
+linkWorkspacePackages: true
+saveWorkspaceProtocol: rolling
+
+allowBuilds:
+  "@tailwindcss/oxide": true
+  esbuild: true
+  sharp: true
+  unrs-resolver: true
+
+# Fumadocs publishes frequently; these pins were younger than pnpm's
+# minimum release age when the workspace was created.
+minimumReleaseAgeExclude:
+  - "@fumadocs/tailwind@0.1.2"
+  - "@fumari/image-size@0.1.1"
+  - fumadocs-core@16.15.11
+  - fumadocs-docgen@3.1.1
+  - fumadocs-mdx@15.4.1
+  - fumadocs-ui@16.15.11
+  - '@tanstack/query-core@5.103.0'
+  - '@tanstack/react-query@5.103.0'

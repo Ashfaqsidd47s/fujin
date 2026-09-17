@@ -1,0 +1,114 @@
+---
+title: Field
+description: Label, description and error for a form control, with the ARIA wiring done for you.
+component: field
+links:
+  api: https://base-ui.com/react/components/field
+---
+
+<ComponentPreview name="field-demo" align="start" />
+
+## Installation
+
+```package-install
+npx shadcn@latest add @fujin/field
+```
+
+## Usage
+
+```tsx
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+} from "@/components/ui/field"
+import { Input } from "@/components/ui/input"
+```
+
+```tsx
+<Field name="email">
+  <FieldLabel required>Email</FieldLabel>
+  <Input type="email" required />
+  <FieldDescription>We only use this to send receipts.</FieldDescription>
+  <FieldError />
+</Field>
+```
+
+## What's different from shadcn/ui
+
+shadcn's `Field` is presentational: nothing links the description or the error to
+the input, so a screen reader user who tabs back to an invalid field hears only
+its label.
+
+Fujin's `Field` is built on Base UI's, which generates the ids and sets
+`aria-describedby` and `aria-invalid` on the control. You never pass `id` or
+`htmlFor`.
+
+## Examples
+
+### With react-hook-form
+
+```tsx
+<Controller
+  name="email"
+  control={form.control}
+  render={({ field, fieldState }) => (
+    <Field name={field.name} invalid={fieldState.invalid}>
+      <FieldLabel required>Email</FieldLabel>
+      <Input {...field} type="email" required />
+      <FieldError errors={[fieldState.error]} />
+    </Field>
+  )}
+/>
+```
+
+Pass `invalid` to `Field` **and** `errors` to `FieldError`.
+
+### Native validation
+
+```tsx
+<Field name="name">
+  <FieldLabel>Name</FieldLabel>
+  <Input required />
+  <FieldError match="valueMissing">Name is required.</FieldError>
+</Field>
+```
+
+## API Reference
+
+### Field
+
+<TypeTable
+  type={{
+    name: { type: "string" },
+    invalid: { type: "boolean", description: "Force the invalid state." },
+    validate: { type: "(value, formValues) => string | string[] | null" },
+    validationMode: { type: '"onSubmit" | "onBlur" | "onChange"' },
+    orientation: { type: '"vertical" | "horizontal"', default: '"vertical"' },
+  }}
+/>
+
+### FieldLabel
+
+<TypeTable
+  type={{
+    required: {
+      type: "boolean",
+      description: "Visual asterisk. Set `required` on the control too.",
+    },
+    optional: { type: "boolean", description: 'Appends "(optional)".' },
+  }}
+/>
+
+### FieldError
+
+<TypeTable
+  type={{
+    errors: {
+      type: "Array<string | { message?: string } | undefined>",
+      description: "Errors from a form library. Shown when non-empty.",
+    },
+    match: { type: "boolean | keyof ValidityState" },
+  }}
+/>

@@ -1,0 +1,65 @@
+---
+title: Installation
+description: Start a new Fujin app, or add Fujin to an existing shadcn project.
+---
+
+## New project
+
+```package-install
+npx @fujin/cli@latest create my-app --template next
+```
+
+Two templates are available:
+
+| Template | Use it for                                                            |
+| -------- | --------------------------------------------------------------------- |
+| `next`   | Next.js 16 App Router: server components, server actions, `proxy.ts`. |
+| `react`  | Vite + React 19 SPA with TanStack Query.                              |
+
+Both come with Tailwind v4, the Fujin theme, the MCP config and an `AGENTS.md`.
+
+## Existing project
+
+Fujin is a shadcn registry, so any project with a `components.json` can use it.
+
+<Steps>
+<Step>
+
+### Initialise
+
+```package-install
+npx @fujin/cli@latest init
+```
+
+This runs `shadcn init` if needed, adds the `@fujin` registry to
+`components.json`, and installs the theme tokens and the `cn` helper.
+
+</Step>
+<Step>
+
+### Add components
+
+```package-install
+npx @fujin/cli@latest add button field
+```
+
+</Step>
+</Steps>
+
+## Without the Fujin CLI
+
+Add the registry to `components.json` yourself:
+
+```json title="components.json"
+{
+  "registries": {
+    "@fujin": "https://fujin.dev/r/{name}.json"
+  }
+}
+```
+
+Then use the shadcn CLI directly:
+
+```package-install
+npx shadcn@latest add @fujin/theme @fujin/button
+```

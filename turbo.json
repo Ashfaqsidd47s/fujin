@@ -1,0 +1,32 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "ui": "tui",
+  "globalDependencies": ["**/.env.*local", "tsconfig.base.json"],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**", ".next/**", "!.next/cache/**", "public/r/**"],
+      "env": ["NEXT_PUBLIC_SITE_URL", "NEXT_OUTPUT", "FUJIN_REGISTRY_URL"]
+    },
+    "registry:build": {
+      "dependsOn": ["^build"],
+      "outputs": ["public/r/**"],
+      "env": ["NEXT_PUBLIC_SITE_URL", "NEXT_OUTPUT", "FUJIN_REGISTRY_URL"]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "lint": {
+      "dependsOn": ["^build"]
+    },
+    "typecheck": {
+      "dependsOn": ["^build"],
+      "outputs": []
+    },
+    "test": {
+      "dependsOn": ["^build"],
+      "outputs": ["coverage/**"]
+    }
+  }
+}

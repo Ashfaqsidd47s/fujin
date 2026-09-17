@@ -1,0 +1,12 @@
+---
+title: React (Vite)
+description: Fujin with Vite and React 19.
+---
+
+```package-install
+npx @fujin/cli@latest create my-app --template react
+```
+
+The template sets `rsc: false`, so the shadcn CLI strips `"use client"`
+directives on install. Recipes install client-side variants that call your API
+through TanStack Query instead of server actions.

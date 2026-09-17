@@ -1,0 +1,60 @@
+{
+  "name": "@fujin/cli",
+  "version": "0.1.0",
+  "description": "Add production-ready Fujin components, blocks and recipes to your project.",
+  "keywords": [
+    "fujin",
+    "cli",
+    "shadcn",
+    "react",
+    "components",
+    "tailwind",
+    "base-ui",
+    "registry"
+  ],
+  "homepage": "https://fujin.dev",
+  "bugs": {
+    "url": "https://github.com/ashfaqaxe-stack/fujin/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ashfaqaxe-stack/fujin.git",
+    "directory": "packages/cli"
+  },
+  "license": "MIT",
+  "author": "ashfaqaxe-stack",
+  "sideEffects": true,
+  "type": "module",
+  "bin": {
+    "fujin": "./dist/index.mjs"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch",
+    "prepublishOnly": "pnpm run build",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@fujin/schema": "workspace:*",
+    "commander": "^14.0.2",
+    "execa": "^9.6.0",
+    "picocolors": "^1.1.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.3",
+    "tsdown": "^0.23.0",
+    "typescript": "6.0.3"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

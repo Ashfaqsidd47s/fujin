@@ -1,0 +1,25 @@
+---
+title: Recipes
+description: Install a whole feature, not a single file.
+---
+
+A recipe is a registry item that installs everything a feature needs: routes,
+server actions or API calls, validation schemas, components and environment
+variables. It is wired, typed and ready to edit.
+
+```package-install
+npx @fujin/cli add auth
+```
+
+Recipes are framework-specific. The CLI picks the Next.js or React variant from
+your `components.json`.
+
+## Planned
+
+| Recipe     | Includes                                                                                            |
+| ---------- | --------------------------------------------------------------------------------------------------- |
+| `auth`     | Sign in, sign up, forgot and reset password, email verification, two-factor, sessions (Better Auth) |
+| `crud`     | List page with data table, create and edit forms, delete confirmation, optimistic updates           |
+| `settings` | Profile, account, notifications, danger zone                                                        |
+| `billing`  | Plans, checkout, customer portal                                                                    |
+| `uploads`  | Direct-to-storage uploads with progress                                                             |

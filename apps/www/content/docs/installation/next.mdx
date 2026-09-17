@@ -1,0 +1,15 @@
+---
+title: Next.js
+description: Fujin with the Next.js App Router.
+---
+
+```package-install
+npx @fujin/cli@latest create my-app --template next
+```
+
+The template sets `rsc: true` in `components.json`, so client components keep
+their `"use client"` directive. Recipes install server actions and route
+handlers for this template.
+
+Next.js 16 ships its own docs in `node_modules/next/dist/docs`; the template's
+`AGENTS.md` tells coding agents to read them before writing framework code.

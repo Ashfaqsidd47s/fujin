@@ -1,0 +1,43 @@
+---
+title: MCP
+description: Give coding agents a structured map of every component.
+---
+
+Every registry item carries agent-facing metadata: a one-line summary, when to
+use it, **when not to**, props, pitfalls, accessibility notes and examples.
+The Fujin MCP server serves it in layers so an agent only pays for what it reads.
+
+| Tool                  | Returns                               | Typical size         |
+| --------------------- | ------------------------------------- | -------------------- |
+| `list_items`          | Name, type and summary for every item | ~35 tokens per item  |
+| `get_item`            | Full guidance for one item, no source | a few hundred tokens |
+| `get_item_source`     | The files that would be installed     | full source          |
+| `search_items`        | Ranked matches for a query            | small                |
+| `get_install_command` | Exact command, including dependencies | one line             |
+
+## Setup
+
+```bash
+npx @fujin/cli mcp init --client claude
+```
+
+Or add it by hand:
+
+```json title=".mcp.json"
+{
+  "mcpServers": {
+    "fujin": {
+      "command": "npx",
+      "args": ["-y", "@fujin/mcp@latest"]
+    }
+  }
+}
+```
+
+The shadcn MCP server (`npx shadcn@latest mcp`) also works: it reads the same
+registry, and the metadata is included in every item under `meta.fujin`.
+
+## Markdown docs
+
+Every docs page is also available as plain markdown. Append `.md` to the URL:
+`/docs/components/button.md`.

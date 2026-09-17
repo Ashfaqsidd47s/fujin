@@ -1,0 +1,70 @@
+---
+title: CLI
+description: Create projects, add components and inspect the registry.
+---
+
+The Fujin CLI is a thin layer over the shadcn CLI. Everything it installs can also
+be installed with `npx shadcn add @fujin/<name>`.
+
+## create
+
+Scaffold a new app from a template.
+
+```bash
+npx @fujin/cli create my-app --template next
+```
+
+## init
+
+Configure an existing project: runs `shadcn init` if there is no
+`components.json`, registers `@fujin`, installs `@fujin/theme` and `@fujin/utils`.
+
+```bash
+npx @fujin/cli init
+```
+
+## add
+
+```bash
+npx @fujin/cli add button field
+```
+
+Names without a namespace resolve to `@fujin`. Pass `--overwrite`, `--dry-run`
+and `--path` through to shadcn.
+
+## list
+
+```bash
+npx @fujin/cli list --type ui --category forms
+```
+
+## info
+
+Prints the agent-facing documentation for an item: when to use it, props,
+pitfalls and examples.
+
+```bash
+npx @fujin/cli info field
+```
+
+## mcp
+
+Writes MCP configuration for your editor.
+
+```bash
+npx @fujin/cli mcp init --client claude
+```
+
+## doctor
+
+Checks React, Tailwind and `components.json` for problems.
+
+```bash
+npx @fujin/cli doctor
+```
+
+## Environment
+
+| Variable             | Default               |
+| -------------------- | --------------------- |
+| `FUJIN_REGISTRY_URL` | `https://fujin.dev/r` |
