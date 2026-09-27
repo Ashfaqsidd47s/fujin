@@ -1,6 +1,6 @@
 # @fujin/schema
 
-Zod schemas and types shared by the [Fujin](https://fujin.dev) CLI, MCP server
+Zod schemas and types shared by the [Fujin](https://package.hellofizzbuzz.in) CLI, MCP server
 and registry build.
 
 - `registryItemSchema`, `registrySchema`: shadcn-compatible registry items,

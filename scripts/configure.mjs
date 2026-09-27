@@ -19,9 +19,9 @@ import { parseArgs } from "node:util"
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
 
 const CURRENT = {
-  site: "https://fujin.dev",
+  site: "https://package.hellofizzbuzz.in",
   scope: "@fujin",
-  repo: "ashfaqaxe-stack/fujin",
+  repo: "Ashfaqsidd47s/fujin",
 }
 const PACKAGES = ["cli", "mcp", "schema", "template-next", "template-react"]
 

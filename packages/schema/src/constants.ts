@@ -3,7 +3,7 @@
  * `pnpm configure --site <url>` rather than by hand: the same URL also appears
  * in the templates and the docs.
  */
-export const SITE_URL = "https://fujin.dev"
+export const SITE_URL = "https://package.hellofizzbuzz.in"
 
 /** Base URL of the registry JSON (`{REGISTRY_URL}/{name}.json`). */
 export const DEFAULT_REGISTRY_URL = `${SITE_URL}/r`
@@ -12,4 +12,4 @@ export const DEFAULT_REGISTRY_URL = `${SITE_URL}/r`
 export const REGISTRY_NAMESPACE = "@fujin"
 
 /** GitHub `owner/repo`. `fujin create` downloads templates from here. */
-export const GITHUB_REPOSITORY = "ashfaqaxe-stack/fujin"
+export const GITHUB_REPOSITORY = "Ashfaqsidd47s/fujin"

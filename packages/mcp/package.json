@@ -1,6 +1,6 @@
 {
   "name": "@fujin/mcp",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Token-efficient MCP server for the Fujin component registry.",
   "keywords": [
     "fujin",
@@ -11,13 +11,13 @@
     "components",
     "ai"
   ],
-  "homepage": "https://fujin.dev",
+  "homepage": "https://package.hellofizzbuzz.in",
   "bugs": {
-    "url": "https://github.com/ashfaqaxe-stack/fujin/issues"
+    "url": "https://github.com/Ashfaqsidd47s/fujin/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ashfaqaxe-stack/fujin.git",
+    "url": "git+https://github.com/Ashfaqsidd47s/fujin.git",
     "directory": "packages/mcp"
   },
   "license": "MIT",
@@ -68,5 +68,5 @@
   "publishConfig": {
     "access": "public"
   },
-  "mcpName": "io.github.ashfaqaxe-stack/fujin"
+  "mcpName": "io.github.Ashfaqsidd47s/fujin"
 }

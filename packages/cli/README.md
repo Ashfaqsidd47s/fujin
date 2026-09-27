@@ -1,6 +1,6 @@
 # fujin
 
-Add production-ready [Fujin](https://fujin.dev) components, blocks and recipes
+Add production-ready [Fujin](https://package.hellofizzbuzz.in) components, blocks and recipes
 to your React project. Fujin is a shadcn-compatible registry built on Base UI
 and Tailwind CSS v4; the code is copied into your project, so you own it.
 
@@ -40,12 +40,12 @@ Global option: `-c, --cwd <path>`.
 
 | Variable             | Default               | Purpose                                      |
 | -------------------- | --------------------- | -------------------------------------------- |
-| `FUJIN_REGISTRY_URL` | `https://fujin.dev/r` | Use a self-hosted or local registry          |
+| `FUJIN_REGISTRY_URL` | `https://package.hellofizzbuzz.in/r` | Use a self-hosted or local registry          |
 | `FUJIN_TEMPLATE_DIR` | -                     | Create apps from a local `templates/` folder |
 
 Everything the CLI installs can also be installed with
 `npx shadcn@latest add @fujin/<name>`.
 
-Docs: https://fujin.dev/docs/cli · Source: https://github.com/ashfaqaxe-stack/fujin
+Docs: https://package.hellofizzbuzz.in/docs/cli · Source: https://github.com/Ashfaqsidd47s/fujin
 
 MIT

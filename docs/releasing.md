@@ -10,8 +10,8 @@ Deploy the site first. The packages point at it.
 
 ## 0. Pick your names (once)
 
-The defaults are `https://fujin.dev`, the npm scope `@fujin` and the GitHub
-repo `ashfaqaxe-stack/fujin`. Change any of them in one step:
+The defaults are `https://package.hellofizzbuzz.in`, the npm scope `@fujin` and the GitHub
+repo `Ashfaqsidd47s/fujin`. Change any of them in one step:
 
 ```bash
 pnpm configure --site https://ui.example.com --scope @your-scope --dry-run

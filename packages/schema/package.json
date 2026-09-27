@@ -1,6 +1,6 @@
 {
   "name": "@fujin/schema",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Registry and MCP metadata schemas shared by the Fujin CLI, MCP server and registry build.",
   "keywords": [
     "fujin",
@@ -10,13 +10,13 @@
     "zod",
     "mcp"
   ],
-  "homepage": "https://fujin.dev",
+  "homepage": "https://package.hellofizzbuzz.in",
   "bugs": {
-    "url": "https://github.com/ashfaqaxe-stack/fujin/issues"
+    "url": "https://github.com/Ashfaqsidd47s/fujin/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ashfaqaxe-stack/fujin.git",
+    "url": "git+https://github.com/Ashfaqsidd47s/fujin.git",
     "directory": "packages/schema"
   },
   "license": "MIT",

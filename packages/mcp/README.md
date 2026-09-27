@@ -1,6 +1,6 @@
 # @fujin/mcp
 
-MCP server for the [Fujin](https://fujin.dev) component registry. It gives
+MCP server for the [Fujin](https://package.hellofizzbuzz.in) component registry. It gives
 coding agents a structured, token-efficient view of every component: what it
 is for, when **not** to use it, props, pitfalls, accessibility notes and
 examples, with source only on request.
@@ -37,7 +37,7 @@ Resources: `fujin://catalog`, `fujin://item/{name}`.
 
 | Variable             | Default                                            |
 | -------------------- | -------------------------------------------------- |
-| `FUJIN_REGISTRY_URL` | `https://fujin.dev/r` (a URL or a local directory) |
+| `FUJIN_REGISTRY_URL` | `https://package.hellofizzbuzz.in/r` (a URL or a local directory) |
 
 ## Programmatic use
 

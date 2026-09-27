@@ -14,7 +14,7 @@ import { fileURLToPath } from "node:url"
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
 const LOCAL_REGISTRY =
   process.env.FUJIN_REGISTRY_URL ?? "http://localhost:4100/r"
-const PUBLIC_REGISTRY = "https://fujin.dev/r"
+const PUBLIC_REGISTRY = "https://package.hellofizzbuzz.in/r"
 
 /** Items every template ships with. */
 const ITEMS = ["theme", "utils", "spinner", "button", "input", "field"]
