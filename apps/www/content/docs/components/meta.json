@@ -1,0 +1,20 @@
+{
+  "title": "Components",
+  "defaultOpen": true,
+  "pages": [
+    "button",
+    "field",
+    "input",
+    "spinner",
+    "table",
+    "checkbox",
+    "separator",
+    "skeleton",
+    "badge",
+    "popover",
+    "tooltip",
+    "dropdown-menu",
+    "command",
+    "data-table"
+  ]
+}

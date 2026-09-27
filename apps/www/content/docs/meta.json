@@ -1,0 +1,14 @@
+{
+  "root": true,
+  "pages": [
+    "index",
+    "installation",
+    "components",
+    "recipes",
+    "registry",
+    "cli",
+    "mcp",
+    "theming",
+    "changelog"
+  ]
+}

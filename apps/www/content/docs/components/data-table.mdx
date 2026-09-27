@@ -1,0 +1,207 @@
+---
+title: Data Table
+description: A TanStack Table v9 data grid with a unified filter search bar, cross-page selection, sticky header and CSV export.
+component: data-table
+---
+
+<ComponentPreview name="data-table-demo" />
+
+## Installation
+
+```package-install
+npx shadcn@latest add @fujin/data-table
+```
+
+This pulls in `table`, `button`, `badge`, `checkbox`, `command`,
+`dropdown-menu` and `skeleton` as registry dependencies, plus
+`@tanstack/react-table` and `nuqs` as npm dependencies.
+
+## Usage
+
+Behaviour and markup are separate, per `AGENTS.md`: `useDataTable` (and
+`useDataTableSelection`) build the table, `<DataTable>` renders it. You
+always call both yourself.
+
+```tsx
+import { DataTable } from "@/components/data-table/data-table"
+import { useDataTable } from "@/lib/data-table/use-data-table"
+import { useDataTableSelection } from "@/lib/data-table/use-data-table-selection"
+```
+
+```tsx
+const table = useDataTable({ data, columns, mode: "client" })
+const selection = useDataTableSelection({
+  pageRowIds: table.getRowModel().rows.map((row) => row.id),
+})
+
+<DataTable table={table} selection={selection} />
+```
+
+## Columns
+
+Two `meta` fields drive everything data-table adds on top of a plain
+`ColumnDef`: `label` (used in the column picker, header, CSV export and the
+column-visibility menu) and `filter` (makes the column filterable from both
+the search bar and its header popover - see below).
+
+```tsx
+const columns: DataTableColumnDef<Invoice>[] = [
+  {
+    id: "status",
+    accessorKey: "status",
+    header: ({ column }) => (
+      <DataTableColumnHeader
+        column={column}
+        title="Status"
+        getColumnOptions={getColumnOptions}
+      />
+    ),
+    meta: {
+      label: "Status",
+      filter: { type: "multi-select", getOptions: getColumnOptions },
+    },
+  },
+]
+```
+
+## The unified filter search bar
+
+Typing in the toolbar's search bar suggests filterable columns; picking one
+shows its values (from `getOptions`, or - in client mode, when a column has
+no `getOptions` - from `column.getFacetedUniqueValues()`); picking values
+turns it into a pill. Clicking a column's header filter icon opens the exact
+same value list and writes to the exact same filter state - there is nothing
+to keep in sync between the two entry points, by construction. Typing text
+that doesn't match a column and pressing it as a plain search runs a global
+search instead.
+
+## Server vs. client mode
+
+```tsx
+// Client: TanStack Table sorts/filters/paginates the full `data` array.
+useDataTable({ data, columns, mode: "client" })
+
+// Server (the default): `data` is already the sorted/filtered/paginated
+// page your API returned. Wire the on*Change callbacks to refetch.
+useDataTable({
+  data: page.rows,
+  columns,
+  mode: "server",
+  rowCount: page.total,
+  sorting,
+  onSortingChange,
+  columnFilters,
+  onColumnFiltersChange,
+  pagination,
+  onPaginationChange,
+})
+```
+
+`useDataTableUrlState()` builds exactly those controlled props from the URL
+via `nuqs`, so filters/sort/pagination survive a refresh and are shareable
+as a link:
+
+```tsx
+const urlState = useDataTableUrlState()
+const { data, rowCount } = useInvoicesQuery(urlState)
+const table = useDataTable({
+  data,
+  columns,
+  mode: "server",
+  rowCount,
+  ...urlState,
+})
+```
+
+It needs a `<NuqsAdapter>` mounted once near the app root (`nuqs/adapters/next`
+or `nuqs/adapters/react`).
+
+## Row selection and bulk actions
+
+`useDataTableSelection` owns a Shopify-style selection descriptor - either an
+explicit `include` set, or an `exclude` set once "Select all N" is chosen -
+instead of TanStack's own `RowSelectionState`, which only knows about rows
+currently loaded and can't represent "every row matching the filters except
+these 3" under server pagination.
+
+```tsx
+<DataTable
+  table={table}
+  selection={selection}
+  bulkActions={[
+    {
+      label: "Archive",
+      icon: <ArchiveIcon />,
+      onAction: (sel) => archiveInvoices(sel),
+    },
+    {
+      label: "Delete",
+      icon: <TrashIcon />,
+      variant: "destructive",
+      onAction: (sel) => deleteInvoices(sel),
+    },
+  ]}
+/>
+```
+
+The first 2 actions render inline in the selection bar (which replaces the
+header row at the same height the moment anything is selected); the rest
+collapse into a "More" menu.
+
+## Sticky header
+
+```tsx
+<DataTable table={table} stickyOffset={64} />
+```
+
+The header (and the selection bar that replaces it) sticks to the viewport,
+`stickyOffset` below the top - set it to a fixed site nav's height.
+
+## CSV export
+
+```tsx
+import { rowsToCsv, downloadCsv } from "@/lib/data-table/csv-export"
+
+;<DataTable
+  table={table}
+  onExport={() => downloadCsv(rowsToCsv(table, table.getRowModel().rows))}
+/>
+```
+
+In server mode there is no full filtered dataset on the client to serialize -
+implement `onExport` to fetch and download the matching rows yourself, using
+the same selection descriptor bulk actions receive.
+
+## What's not in v1
+
+Column pinning, resizing, drag-to-reorder and row grouping; saved filter
+views; row virtualization is not wired up despite `@tanstack/react-virtual`
+being a listed dependency. All deferred deliberately - see
+`docs/data-table-plan.md` for why and what the data shapes here already
+leave room for.
+
+## API Reference
+
+<TypeTable
+  type={{
+    "useDataTable.mode": { type: '"server" | "client"', default: '"server"' },
+    "useDataTable.rowCount": {
+      type: "number",
+      description: "Required in server mode.",
+    },
+    "useDataTable.getRowId": {
+      type: "(row: TData, index: number) => string",
+    },
+    "Column meta.label": { type: "string" },
+    "Column meta.filter": {
+      type: "{ type, getOptions? }",
+      description:
+        "type is one of text | select | multi-select | date-range | number-range | boolean.",
+    },
+    "DataTable.selection": { type: "UseDataTableSelectionResult" },
+    "DataTable.bulkActions": {
+      type: "{ label, icon?, onAction(selection), variant? }[]",
+    },
+    "DataTable.stickyOffset": { type: "number | string", default: "0" },
+  }}
+/>

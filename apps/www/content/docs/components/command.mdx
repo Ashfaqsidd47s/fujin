@@ -1,0 +1,112 @@
+---
+title: Command
+description: A searchable, data-driven listbox - the picker behind data-table's filter search bar.
+component: command
+links:
+  api: https://base-ui.com/react/components/combobox
+---
+
+<ComponentPreview name="command-demo" />
+
+## Installation
+
+```package-install
+npx shadcn@latest add @fujin/command
+```
+
+## Usage
+
+```tsx
+import {
+  Command,
+  CommandEmpty,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  CommandPopup,
+} from "@/components/ui/command"
+```
+
+```tsx
+<Command items={frameworks} value={value} onValueChange={setValue}>
+  <CommandInput placeholder="Search frameworks..." />
+  <CommandPopup>
+    <CommandEmpty>No framework found.</CommandEmpty>
+    <CommandList>
+      {(framework) => (
+        <CommandItem key={framework.value} value={framework}>
+          {framework.label}
+        </CommandItem>
+      )}
+    </CommandList>
+  </CommandPopup>
+</Command>
+```
+
+## What's different from shadcn/ui
+
+shadcn's `command` wraps [cmdk](https://cmdk.paco.me/), which filters by
+scanning each item's rendered text. This one is built on Base UI's
+`Combobox` instead: filtering matches against the `items` array you pass to
+`Command`, not against the DOM. Pass the full unfiltered list; `CommandList`'s
+children render whatever matched.
+
+## Multi-select with chips
+
+```tsx
+<Command items={statuses} value={selected} onValueChange={setSelected} multiple>
+  <CommandChips>
+    {selected.map((status) => (
+      <CommandChip key={status.value}>
+        {status.label}
+        <CommandChipRemove />
+      </CommandChip>
+    ))}
+    <CommandInput placeholder="Add status..." />
+  </CommandChips>
+  <CommandPopup>
+    <CommandList>
+      {(status) => (
+        <CommandItem key={status.value} value={status}>
+          {status.label}
+        </CommandItem>
+      )}
+    </CommandList>
+  </CommandPopup>
+</Command>
+```
+
+This is the shape [`data-table`](/docs/components/data-table) uses for its
+per-column, multi-select value filters.
+
+## Pitfalls
+
+- Without `items`, the built-in filter has nothing to match against - unlike
+  cmdk, static children are never filtered.
+- `CommandInput` used alone is the popup's anchor - don't nest it inside
+  `CommandPopup`. For a searchable dropdown (click a button, then search the
+  opened list), anchor with `CommandTrigger` instead and put `CommandInput`
+  inside `CommandPopup`.
+
+## API Reference
+
+<TypeTable
+  type={{
+    "Command.items": {
+      type: "readonly Item[] | readonly Group<Item>[]",
+      description: "The full, unfiltered list.",
+    },
+    "Command.multiple": {
+      type: "boolean",
+      default: "false",
+      description: "Allows selecting more than one item.",
+    },
+    "Command.filter": {
+      type: "(item, query, itemToString?) => boolean",
+      description: "Overrides the default substring match.",
+    },
+  }}
+/>
+
+Every other prop is forwarded to the Base UI
+[Combobox](https://base-ui.com/react/components/combobox).

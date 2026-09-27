@@ -1,0 +1,26 @@
+---
+title: Registry
+description: How the Fujin registry is organised and served.
+---
+
+Fujin is a [shadcn registry](https://ui.shadcn.com/docs/registry). It follows the
+same schema, so the shadcn CLI and MCP server work with it unchanged.
+
+| URL                  | Contents                                    |
+| -------------------- | ------------------------------------------- |
+| `/r/registry.json`   | Registry index (shadcn format)              |
+| `/r/{name}.json`     | One item, with file contents inlined        |
+| `/r/mcp/index.json`  | Compact catalog for agents                  |
+| `/r/mcp/{name}.json` | Agent documentation for one item, no source |
+
+## Item tiers
+
+| Type                 | Tier                    | Example              |
+| -------------------- | ----------------------- | -------------------- |
+| `registry:ui`        | Primitives              | `button`, `field`    |
+| `registry:component` | Composites              | `data-table`, `form` |
+| `registry:block`     | Pages and sections      | `dashboard-shell`    |
+| `registry:item`      | Recipes: whole features | `auth`               |
+
+Composites split behaviour from markup: headless hooks go to `lib/`, markup goes
+to `components/`. The item's `meta.fujin.editing` field says which is which.

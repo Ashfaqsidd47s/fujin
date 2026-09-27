@@ -1,0 +1,22 @@
+---
+title: Theming
+description: CSS variables, compatible with shadcn/ui, plus status colours.
+---
+
+Fujin uses the same CSS variables as shadcn/ui, so existing themes work
+unchanged. It adds tokens shadcn does not define:
+
+| Token                                | Use                             |
+| ------------------------------------ | ------------------------------- |
+| `--success` / `--success-foreground` | Completed, paid, healthy        |
+| `--warning` / `--warning-foreground` | Needs attention                 |
+| `--info` / `--info-foreground`       | Neutral notices                 |
+| `--destructive-foreground`           | Text on destructive backgrounds |
+
+```package-install
+npx shadcn@latest add @fujin/theme
+```
+
+```tsx
+<span className="bg-success text-success-foreground">Paid</span>
+```

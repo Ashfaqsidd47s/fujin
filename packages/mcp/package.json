@@ -1,0 +1,72 @@
+{
+  "name": "@fujin/mcp",
+  "version": "0.1.0",
+  "description": "Token-efficient MCP server for the Fujin component registry.",
+  "keywords": [
+    "fujin",
+    "mcp",
+    "model-context-protocol",
+    "shadcn",
+    "react",
+    "components",
+    "ai"
+  ],
+  "homepage": "https://fujin.dev",
+  "bugs": {
+    "url": "https://github.com/ashfaqaxe-stack/fujin/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ashfaqaxe-stack/fujin.git",
+    "directory": "packages/mcp"
+  },
+  "license": "MIT",
+  "author": "ashfaqaxe-stack",
+  "sideEffects": [
+    "./dist/bin.mjs"
+  ],
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "default": "./dist/index.mjs"
+    }
+  },
+  "main": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "bin": {
+    "fujin-mcp": "./dist/bin.mjs"
+  },
+  "files": [
+    "dist",
+    "server.json",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch",
+    "prepublishOnly": "pnpm run build",
+    "smoke": "tsx ./scripts/smoke.ts",
+    "start": "node ./dist/bin.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@fujin/schema": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.3",
+    "tsdown": "^0.23.0",
+    "tsx": "^4.20.6",
+    "typescript": "6.0.3"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "mcpName": "io.github.ashfaqaxe-stack/fujin"
+}

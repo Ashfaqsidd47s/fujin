@@ -1,0 +1,40 @@
+---
+title: Badge
+description: A small status or count label with 7 variants.
+component: badge
+---
+
+<ComponentPreview name="badge-demo" />
+
+## Installation
+
+```package-install
+npx shadcn@latest add @fujin/badge
+```
+
+## Usage
+
+```tsx
+import { Badge } from "@/components/ui/badge"
+```
+
+```tsx
+<Badge variant="success">Paid</Badge>
+```
+
+## What's different from shadcn/ui
+
+Three extra variants - `success`, `warning`, `info` - use the status tokens
+`@fujin/theme` adds. They need that theme item installed (`fujin init` does
+this for you).
+
+## API Reference
+
+<TypeTable
+  type={{
+    variant: {
+      type: '"default" | "secondary" | "destructive" | "success" | "warning" | "info" | "outline"',
+      default: '"default"',
+    },
+  }}
+/>

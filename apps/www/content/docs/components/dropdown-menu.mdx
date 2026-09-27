@@ -1,0 +1,77 @@
+---
+title: Dropdown Menu
+description: An anchored menu of actions, with checkbox items, radio items and submenus.
+component: dropdown-menu
+links:
+  api: https://base-ui.com/react/components/menu
+---
+
+<ComponentPreview name="dropdown-menu-demo" />
+
+## Installation
+
+```package-install
+npx shadcn@latest add @fujin/dropdown-menu
+```
+
+## Usage
+
+```tsx
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+```
+
+```tsx
+<DropdownMenu>
+  <DropdownMenuTrigger render={<Button variant="outline">Open</Button>} />
+  <DropdownMenuContent>
+    <DropdownMenuItem>Edit</DropdownMenuItem>
+    <DropdownMenuItem variant="destructive">Delete</DropdownMenuItem>
+  </DropdownMenuContent>
+</DropdownMenu>
+```
+
+## Column visibility
+
+```tsx
+<DropdownMenuCheckboxItem
+  checked={column.getIsVisible()}
+  onCheckedChange={column.toggleVisibility}
+>
+  {column.label}
+</DropdownMenuCheckboxItem>
+```
+
+## Pitfalls
+
+- An icon-only trigger needs its own `aria-label` - the menu's accessible
+  name does not cover it.
+- `DropdownMenuCheckboxItem` and `DropdownMenuRadioItem` already set
+  `closeOnClick={false}` so picking one doesn't close a multi-pick menu -
+  override it if you actually want it to close.
+
+## API Reference
+
+<TypeTable
+  type={{
+    "DropdownMenuItem.variant": {
+      type: '"default" | "destructive"',
+      default: '"default"',
+    },
+    "DropdownMenuContent.side": {
+      type: '"top" | "right" | "bottom" | "left"',
+      default: '"bottom"',
+    },
+    "DropdownMenuContent.align": {
+      type: '"start" | "center" | "end"',
+      default: '"start"',
+    },
+  }}
+/>
+
+Every other prop is forwarded to the Base UI
+[Menu](https://base-ui.com/react/components/menu).

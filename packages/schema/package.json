@@ -1,0 +1,58 @@
+{
+  "name": "@fujin/schema",
+  "version": "0.1.0",
+  "description": "Registry and MCP metadata schemas shared by the Fujin CLI, MCP server and registry build.",
+  "keywords": [
+    "fujin",
+    "shadcn",
+    "registry",
+    "schema",
+    "zod",
+    "mcp"
+  ],
+  "homepage": "https://fujin.dev",
+  "bugs": {
+    "url": "https://github.com/ashfaqaxe-stack/fujin/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ashfaqaxe-stack/fujin.git",
+    "directory": "packages/schema"
+  },
+  "license": "MIT",
+  "author": "ashfaqaxe-stack",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "default": "./dist/index.mjs"
+    }
+  },
+  "main": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch",
+    "prepublishOnly": "pnpm run build",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "tsdown": "^0.23.0",
+    "typescript": "6.0.3"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

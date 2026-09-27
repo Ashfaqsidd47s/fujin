@@ -1,0 +1,42 @@
+{
+  "name": "fujin",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Production-ready components, recipes and an agent-native registry.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ashfaqaxe-stack/fujin.git"
+  },
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "build": "turbo run build",
+    "changeset": "changeset",
+    "configure": "node scripts/configure.mjs",
+    "dev": "turbo run dev",
+    "format": "prettier --check \"**/*.{ts,tsx,mjs,cjs,js,json,md,mdx,css}\"",
+    "format:write": "prettier --write \"**/*.{ts,tsx,mjs,cjs,js,json,md,mdx,css}\"",
+    "lint": "turbo run lint",
+    "lint:fix": "turbo run lint -- --fix",
+    "registry:build": "turbo run registry:build",
+    "release": "turbo run build --filter=./packages/* && node scripts/publish-packages.mjs",
+    "release:dry": "turbo run build --filter=./packages/* && node scripts/publish-packages.mjs --dry-run",
+    "templates:sync": "node scripts/sync-templates.mjs",
+    "test": "turbo run test",
+    "typecheck": "turbo run typecheck",
+    "version-packages": "changeset version && node scripts/sync-versions.mjs && pnpm install --lockfile-only"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^3.0.3",
+    "@types/node": "^22.15.3",
+    "prettier": "^3.9.6",
+    "prettier-plugin-packagejson": "^2.5.19",
+    "prettier-plugin-tailwindcss": "^0.8.1",
+    "turbo": "^2.10.13",
+    "typescript": "6.0.3"
+  },
+  "packageManager": "pnpm@11.18.0",
+  "engines": {
+    "node": ">=22.12.0"
+  }
+}

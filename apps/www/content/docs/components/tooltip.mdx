@@ -1,0 +1,63 @@
+---
+title: Tooltip
+description: A hover/focus hint. Not a substitute for an accessible name.
+component: tooltip
+links:
+  api: https://base-ui.com/react/components/tooltip
+---
+
+<ComponentPreview name="tooltip-demo" />
+
+## Installation
+
+```package-install
+npx shadcn@latest add @fujin/tooltip
+```
+
+## Usage
+
+```tsx
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+```
+
+```tsx
+<TooltipProvider>
+  <Tooltip>
+    <TooltipTrigger
+      render={
+        <Button variant="ghost" size="icon" aria-label="Delete">
+          <TrashIcon />
+        </Button>
+      }
+    />
+    <TooltipContent>Delete</TooltipContent>
+  </Tooltip>
+</TooltipProvider>
+```
+
+## Pitfalls
+
+- Never make a tooltip the only source of a control's accessible name - touch
+  users and some screen-reader interactions never trigger hover. Always set
+  `aria-label` on the trigger too.
+- Wrap a group of tooltips in one `TooltipProvider` so the shared delay
+  applies - the second tooltip then opens instantly instead of waiting out
+  its own full delay.
+
+## API Reference
+
+<TypeTable
+  type={{
+    "TooltipContent.side": {
+      type: '"top" | "right" | "bottom" | "left"',
+      default: '"top"',
+    },
+    "TooltipContent.sideOffset": { type: "number", default: "6" },
+    "TooltipProvider.delay": { type: "number", description: "Milliseconds." },
+  }}
+/>

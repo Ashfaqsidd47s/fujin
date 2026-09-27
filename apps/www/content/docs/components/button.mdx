@@ -1,0 +1,98 @@
+---
+title: Button
+description: A button with variants, sizes and a built-in loading state. Never submits a form by accident.
+component: button
+links:
+  api: https://base-ui.com/react/components/button
+---
+
+<ComponentPreview name="button-demo" />
+
+## Installation
+
+```package-install
+npx shadcn@latest add @fujin/button
+```
+
+## Usage
+
+```tsx
+import { Button } from "@/components/ui/button"
+```
+
+```tsx
+<Button variant="outline">Button</Button>
+```
+
+## What's different from shadcn/ui
+
+- **`loading` is built in.** It shows a spinner, sets `aria-busy`, blocks clicks,
+  keeps focus on the button and keeps its width so the layout doesn't jump.
+- **`type` defaults to `"button"`.** A button inside a `<form>` no longer submits
+  it by accident. Write `type="submit"` when you mean it.
+- **The focus ring is solid.** Alpha rings fall below the 3:1 contrast WCAG 1.4.11
+  requires.
+- **`render` instead of `asChild`**, from Base UI.
+
+## Examples
+
+### Loading
+
+```tsx
+const [pending, startTransition] = React.useTransition()
+
+<Button loading={pending} loadingText="Saving..." onClick={() => startTransition(save)}>
+  Save
+</Button>
+```
+
+Leave out `loadingText` to keep the label in place (invisible) with a spinner on top.
+
+### As a link
+
+```tsx
+<Button render={<Link href="/billing" />} nativeButton={false}>
+  Billing
+</Button>
+```
+
+### Icon only
+
+Icon-only buttons need an `aria-label`.
+
+```tsx
+<Button variant="ghost" size="icon" aria-label="Delete row">
+  <TrashIcon />
+</Button>
+```
+
+## API Reference
+
+<TypeTable
+  type={{
+    variant: {
+      type: '"default" | "destructive" | "outline" | "secondary" | "ghost" | "link"',
+      default: '"default"',
+    },
+    size: {
+      type: '"default" | "xs" | "sm" | "lg" | "icon" | "icon-xs" | "icon-sm" | "icon-lg"',
+      default: '"default"',
+    },
+    type: { type: '"button" | "submit" | "reset"', default: '"button"' },
+    loading: {
+      type: "boolean",
+      default: "false",
+      description: "Shows a spinner and blocks activation.",
+    },
+    loadingText: {
+      type: "ReactNode",
+      description: "Replaces the label while loading.",
+    },
+    render: {
+      type: "ReactElement | function",
+      description: "Render as a different element.",
+    },
+  }}
+/>
+
+Every other prop is forwarded to the Base UI [Button](https://base-ui.com/react/components/button).

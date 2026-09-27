@@ -1,0 +1,60 @@
+---
+title: Popover
+description: A non-modal panel anchored to a trigger.
+component: popover
+links:
+  api: https://base-ui.com/react/components/popover
+---
+
+<ComponentPreview name="popover-demo" />
+
+## Installation
+
+```package-install
+npx shadcn@latest add @fujin/popover
+```
+
+## Usage
+
+```tsx
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+```
+
+```tsx
+<Popover>
+  <PopoverTrigger render={<Button variant="outline">Filters</Button>} />
+  <PopoverContent>...</PopoverContent>
+</Popover>
+```
+
+## What's different from shadcn/ui
+
+`render` replaces `asChild`, from Base UI - same as `button`.
+
+## API Reference
+
+<TypeTable
+  type={{
+    "PopoverContent.side": {
+      type: '"top" | "right" | "bottom" | "left"',
+      default: '"bottom"',
+    },
+    "PopoverContent.align": {
+      type: '"start" | "center" | "end"',
+      default: '"center"',
+    },
+    "PopoverContent.sideOffset": { type: "number", default: "8" },
+    "PopoverContent.showClose": {
+      type: "boolean",
+      default: "false",
+      description: "Renders a close button in the corner.",
+    },
+  }}
+/>
+
+Every other prop is forwarded to the Base UI
+[Popover](https://base-ui.com/react/components/popover).

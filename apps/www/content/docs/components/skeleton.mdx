@@ -1,0 +1,29 @@
+---
+title: Skeleton
+description: A pulsing placeholder that mirrors the shape of loading content.
+component: skeleton
+---
+
+<ComponentPreview name="skeleton-demo" />
+
+## Installation
+
+```package-install
+npx shadcn@latest add @fujin/skeleton
+```
+
+## Usage
+
+```tsx
+import { Skeleton } from "@/components/ui/skeleton"
+```
+
+```tsx
+<Skeleton className="h-4 w-40" />
+```
+
+## When not to use
+
+The shape of what's loading is unknown, or the region is small - use
+[`spinner`](/docs/components/spinner) instead. A busy button already has
+`<Button loading>` built in.

@@ -1,0 +1,59 @@
+---
+title: Checkbox
+description: A tri-state checkbox - checked, unchecked or indeterminate.
+component: checkbox
+links:
+  api: https://base-ui.com/react/components/checkbox
+---
+
+<ComponentPreview name="checkbox-demo" />
+
+## Installation
+
+```package-install
+npx shadcn@latest add @fujin/checkbox
+```
+
+## Usage
+
+```tsx
+import { Checkbox } from "@/components/ui/checkbox"
+```
+
+```tsx
+<Checkbox checked={checked} onCheckedChange={setChecked} />
+```
+
+## Indeterminate (partial page selection)
+
+`indeterminate` is a visual state layered on top of `checked` - it does not
+change what `onCheckedChange` reports. `data-table`'s header checkbox uses
+this for "some, not all rows on this page are selected."
+
+```tsx
+<Checkbox
+  checked={allSelected}
+  indeterminate={someSelected && !allSelected}
+  onCheckedChange={toggleAll}
+  aria-label="Select all rows"
+/>
+```
+
+## API Reference
+
+<TypeTable
+  type={{
+    checked: { type: "boolean", description: "Controlled checked state." },
+    onCheckedChange: {
+      type: "(checked: boolean, details) => void",
+    },
+    indeterminate: {
+      type: "boolean",
+      default: "false",
+      description: 'Visual "some, not all" state.',
+    },
+  }}
+/>
+
+Every other prop is forwarded to the Base UI
+[Checkbox](https://base-ui.com/react/components/checkbox).

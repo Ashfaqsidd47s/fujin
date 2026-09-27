@@ -1,0 +1,37 @@
+---
+title: Separator
+description: A visual divider between groups of content.
+component: separator
+links:
+  api: https://base-ui.com/react/components/separator
+---
+
+<ComponentPreview name="separator-demo" />
+
+## Installation
+
+```package-install
+npx shadcn@latest add @fujin/separator
+```
+
+## Usage
+
+```tsx
+import { Separator } from "@/components/ui/separator"
+```
+
+```tsx
+<Separator />
+<Separator orientation="vertical" />
+```
+
+## API Reference
+
+<TypeTable
+  type={{
+    orientation: {
+      type: '"horizontal" | "vertical"',
+      default: '"horizontal"',
+    },
+  }}
+/>

@@ -1,0 +1,74 @@
+---
+title: Table
+description: Semantic table parts with a sticky-header option, built for data-table.
+component: table
+---
+
+<ComponentPreview name="table-demo" />
+
+## Installation
+
+```package-install
+npx shadcn@latest add @fujin/table
+```
+
+## Usage
+
+```tsx
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+```
+
+```tsx
+<Table>
+  <TableHeader>
+    <TableRow>
+      <TableHead>Name</TableHead>
+    </TableRow>
+  </TableHeader>
+  <TableBody>
+    <TableRow>
+      <TableCell>Row</TableCell>
+    </TableRow>
+  </TableBody>
+</Table>
+```
+
+## Sticky header
+
+`TableHeader` accepts a `sticky` prop. It sticks to the top of the table's
+scroll container using the `--fujin-data-table-offset` CSS variable (which
+`data-table` sets for you) so it can sit below a fixed site nav without extra
+wiring.
+
+```tsx
+<TableHeader sticky>...</TableHeader>
+```
+
+## What this is not
+
+`table` is markup only - no sorting, filtering, pagination or selection. For
+all of that, use [`data-table`](/docs/components/data-table), which composes
+this component with a headless TanStack Table hook.
+
+## API Reference
+
+<TypeTable
+  type={{
+    "TableHeader.sticky": {
+      type: "boolean",
+      default: "false",
+      description:
+        "Sticks the header using --fujin-data-table-offset as the top offset.",
+    },
+  }}
+/>
+
+Every other prop is forwarded to the underlying HTML element (`table`,
+`thead`, `tbody`, `tr`, `th`, `td`, `caption`).

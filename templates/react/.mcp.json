@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "fujin": {
+      "command": "npx",
+      "args": ["-y", "@fujin/mcp@latest"]
+    }
+  }
+}
