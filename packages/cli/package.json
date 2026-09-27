@@ -40,13 +40,13 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@fujin/schema": "workspace:*",
     "commander": "^14.0.2",
     "execa": "^9.6.0",
     "picocolors": "^1.1.1",
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@fujin/schema": "workspace:*",
     "@types/node": "^22.15.3",
     "tsdown": "^0.23.0",
     "typescript": "6.0.3"
