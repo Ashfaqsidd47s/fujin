@@ -1,6 +1,6 @@
 ---
 title: Data Table
-description: A TanStack Table v9 data grid with a unified filter search bar, cross-page selection, sticky header and CSV export.
+description: A Shopify admin-style index table. One search bar holds views, filter chips and GitHub-style qualifiers, alongside saved views, sortable and filterable headers, and cross-page selection with bulk actions.
 component: data-table
 ---
 
@@ -12,196 +12,341 @@ component: data-table
 npx shadcn@latest add @fujin/data-table
 ```
 
-This pulls in `table`, `button`, `badge`, `checkbox`, `command`,
-`dropdown-menu` and `skeleton` as registry dependencies, plus
-`@tanstack/react-table` and `nuqs` as npm dependencies.
+This adds `table`, `button`, `badge`, `checkbox`, `dropdown-menu`, `input`,
+`popover`, `skeleton` and `tooltip`, plus `@tanstack/react-table` and `nuqs`.
 
 ## Usage
 
-Behaviour and markup are separate, per `AGENTS.md`: `useDataTable` (and
-`useDataTableSelection`) build the table, `<DataTable>` renders it. You
-always call both yourself.
+`useDataTable` holds the state and `<DataTable>` renders it.
 
 ```tsx
 import { DataTable } from "@/components/data-table/data-table"
+import type { DataTableColumnDef, FilterDef } from "@/lib/data-table/types"
 import { useDataTable } from "@/lib/data-table/use-data-table"
-import { useDataTableSelection } from "@/lib/data-table/use-data-table-selection"
 ```
 
 ```tsx
-const table = useDataTable({ data, columns, mode: "client" })
-const selection = useDataTableSelection({
-  pageRowIds: table.getRowModel().rows.map((row) => row.id),
-})
-
-<DataTable table={table} selection={selection} />
-```
-
-## Columns
-
-Two `meta` fields drive everything data-table adds on top of a plain
-`ColumnDef`: `label` (used in the column picker, header, CSV export and the
-column-visibility menu) and `filter` (makes the column filterable from both
-the search bar and its header popover - see below).
-
-```tsx
-const columns: DataTableColumnDef<Invoice>[] = [
+const columns: DataTableColumnDef<Product>[] = [
   {
-    id: "status",
-    accessorKey: "status",
-    header: ({ column }) => (
-      <DataTableColumnHeader
-        column={column}
-        title="Status"
-        getColumnOptions={getColumnOptions}
-      />
-    ),
-    meta: {
-      label: "Status",
-      filter: { type: "multi-select", getOptions: getColumnOptions },
-    },
+    id: "title",
+    accessorKey: "title",
+    header: "Product",
+    meta: { lockVisibility: true },
+  },
+  { id: "status", accessorKey: "status", header: "Status" },
+  {
+    id: "price",
+    accessorKey: "price",
+    header: "Price",
+    meta: { align: "end" },
   },
 ]
+
+const filters: FilterDef<Product>[] = [
+  {
+    key: "status",
+    label: "Status",
+    type: "enum",
+    pinned: true,
+    negatable: true,
+    options: [
+      { value: "active", label: "Active" },
+      { value: "draft", label: "Draft" },
+    ],
+  },
+  { key: "price", label: "Price", type: "number-range", prefix: "$" },
+]
+
+export function Products({ products }: { products: Product[] }) {
+  const table = useDataTable({
+    data: products,
+    columns,
+    filters,
+    getRowId: (product) => product.id,
+    tableId: "products",
+  })
+  return (
+    <DataTable
+      table={table}
+      resourceName={{ singular: "product", plural: "products" }}
+    />
+  )
+}
 ```
 
-## The unified filter search bar
+Define `columns`, `filters` and `views` outside the component, or memoize
+them.
 
-Typing in the toolbar's search bar suggests filterable columns; picking one
-shows its values (from `getOptions`, or - in client mode, when a column has
-no `getOptions` - from `column.getFacetedUniqueValues()`); picking values
-turns it into a pill. Clicking a column's header filter icon opens the exact
-same value list and writes to the exact same filter state - there is nothing
-to keep in sync between the two entry points, by construction. Typing text
-that doesn't match a column and pressing it as a plain search runs a global
-search instead.
+## Filters
 
-## Server vs. client mode
+A filter is a `FilterDef`. It doesn't have to be a column: Shopify filters
+products on "Tagged with" without showing tags. `key` is the URL parameter, the
+typed-qualifier name and the key in `list.filters`.
+
+| `type`         | Picker                                           | Value                              |
+| -------------- | ------------------------------------------------ | ---------------------------------- |
+| `enum`         | Checkboxes with search; is / is not              | `{ op: "in" \| "not_in", values }` |
+| `async`        | Same, options loaded as you type                 | `{ op: "in" \| "not_in", values }` |
+| `text`         | "contains" input                                 | `{ op: "contains", value }`        |
+| `boolean`      | Yes / No                                         | `{ op: "eq", value }`              |
+| `number-range` | Min and max                                      | `{ op: "between", min, max }`      |
+| `date-range`   | Today, Last 7/30/90 days, Last 12 months, custom | `{ op: "between", min, max }`      |
+
+Options for every filter:
+
+- `pinned` lists it first.
+- `negatable` adds "is not".
+- `multiple: false` allows one value only.
+- `aliases` adds other qualifier spellings.
+- `getValue(row)` tells client mode what to test. It defaults to the column
+  whose id (or `meta.filterKey`) matches `key`.
+
+For values you only know from the data, `uniqueOptions(rows, (row) =>
+row.vendor)` builds enum options with counts.
+
+## The search and filter bar
+
+It works like the search bar in the Shopify admin's Products and Orders pages:
+
+- **Focus** lists the filters. Pick one and its chip opens with the picker.
+- **Type** to get matching filters and values. "dr" offers **Status is
+  Draft**, and a view whose name matches the text is offered as well.
+- **Chips** read "Status is Active, Draft". Click one to edit it; Delete or
+  Backspace removes it. ← and → move between chips and back into the box.
+- **Free text** searches after a short pause, or on Enter. In client mode
+  every word must appear somewhere in the row; `"quoted phrases"` stay
+  together.
+- **ⓧ** returns to the selected view's own query.
+
+GitHub-style qualifiers work too. They turn into chips when you type a space
+or press Enter:
+
+```txt
+status:active,draft        comma = any of
+-vendor:acme               is not (negatable filters)
+title:"halo ring"          quotes for spaces
+price:10..20  price:>=10   ranges
+created:2026-01-01..2026-03-31
+giftCard:yes
+```
+
+Values match an option's value or label, or a unique prefix of one
+(`vendor:acme` finds "Acme Co"). After `status:`, the list offers that
+filter's values. A qualifier the table doesn't recognise stays in the box
+with a warning and never blocks the rest.
+
+## Views
 
 ```tsx
-// Client: TanStack Table sorts/filters/paginates the full `data` array.
-useDataTable({ data, columns, mode: "client" })
+const views: DataTableView[] = [
+  { id: "all", label: "All", query: {} },
+  { id: "active", label: "Active", query: { filters: { status: { op: "in", values: ["active"] } } } },
+]
 
-// Server (the default): `data` is already the sorted/filtered/paginated
-// page your API returned. Wire the on*Change callbacks to refetch.
-useDataTable({
-  data: page.rows,
-  columns,
-  mode: "server",
-  rowCount: page.total,
-  sorting,
-  onSortingChange,
-  columnFilters,
-  onColumnFiltersChange,
-  pagination,
-  onPaginationChange,
+<DataTable table={table} views={views} />
+```
+
+- The view menu sits at the start of the bar. A dot marks unsaved changes.
+- **Save as** stores the current query as a new view. Names are unique and
+  at most 40 characters.
+- On a saved view, **Save** offers "Update view" or "Save as new view".
+- Saved views can be renamed, duplicated and deleted. Built-in views can't.
+
+With `tableId` set, saved views stay in this browser. Pass `savedViews` and
+`onSavedViewsChange` to keep them on your server and share them with the
+team.
+
+## Server mode and URL state
+
+`useUrlListState` keeps search, sort, filters and page in the URL as flat,
+readable parameters. The same parameters are what your API receives:
+
+```txt
+?q=ring&status=active,draft&vendor_not=Acme%20Co&price_gte=10&price_lte=50&created_gte=2026-01-01&sort=-price&page=2
+```
+
+```tsx
+import { useUrlListState } from "@/lib/data-table/use-list-state"
+
+const list = useUrlListState({ filters })
+const { data, isFetching } = useQuery({
+  queryKey: ["products", list.params, list.pagination],
+  queryFn: () =>
+    api.products({ ...list.params, page: list.pagination.pageIndex + 1 }),
 })
-```
 
-`useDataTableUrlState()` builds exactly those controlled props from the URL
-via `nuqs`, so filters/sort/pagination survive a refresh and are shareable
-as a link:
-
-```tsx
-const urlState = useDataTableUrlState()
-const { data, rowCount } = useInvoicesQuery(urlState)
 const table = useDataTable({
-  data,
-  columns,
   mode: "server",
-  rowCount,
-  ...urlState,
+  data: data?.rows ?? [],
+  rowCount: data?.total ?? 0,
+  getRowId: (product) => product.id,
+  columns,
+  filters,
+  list,
+  pagination: list.pagination,
+  onPaginationChange: list.onPaginationChange,
 })
+
+<DataTable table={table} loading={!data} fetching={isFetching} />
 ```
 
-It needs a `<NuqsAdapter>` mounted once near the app root (`nuqs/adapters/next`
-or `nuqs/adapters/react`).
+- Mount a `<NuqsAdapter>` once near the app root: `nuqs/adapters/next/app`
+  or `nuqs/adapters/react`.
+- In Next.js, pages that fetch in a Server Component pass
+  `useUrlListState({ filters, shallow: false })`.
+- In server mode the types require `getRowId`, so "Select all" never
+  confuses rows from different pages, and `rowCount`.
+- Server-mode columns are sortable only when they set `meta.sortField`,
+  because most APIs sort on a few fields only.
 
-## Row selection and bulk actions
+| Filter value | Parameters                                           |
+| ------------ | ---------------------------------------------------- |
+| any of       | `key=a,b` (commas in values arrive as `%2C`)         |
+| none of      | `key_not=a,b`                                        |
+| contains     | `key=text`                                           |
+| yes / no     | `key=true` / `key=false`                             |
+| range        | `key_gte=min&key_lte=max` (numbers, or `YYYY-MM-DD`) |
 
-`useDataTableSelection` owns a Shopify-style selection descriptor - either an
-explicit `include` set, or an `exclude` set once "Select all N" is chosen -
-instead of TanStack's own `RowSelectionState`, which only knows about rows
-currently loaded and can't represent "every row matching the filters except
-these 3" under server pagination.
+## Selection and bulk actions
 
 ```tsx
 <DataTable
   table={table}
-  selection={selection}
   bulkActions={[
     {
-      label: "Archive",
-      icon: <ArchiveIcon />,
-      onAction: (sel) => archiveInvoices(sel),
+      id: "activate",
+      label: "Set as active",
+      promoted: true,
+      onAction: (selection) => activate(selection),
     },
     {
+      id: "archive",
+      label: "Archive",
+      supportsAllMatching: true,
+      onAction: (selection) => archive(selection),
+    },
+    {
+      id: "delete",
       label: "Delete",
-      icon: <TrashIcon />,
       variant: "destructive",
-      onAction: (sel) => deleteInvoices(sel),
+      onAction: (selection, rows) => remove(rows),
     },
   ]}
+  rowActions={[{ id: "edit", label: "Edit", onAction: (row) => open(row) }]}
+  onRowClick={(row) => open(row)}
 />
 ```
 
-The first 2 actions render inline in the selection bar (which replaces the
-header row at the same height the moment anything is selected); the rest
-collapse into a "More" menu.
+- Selecting rows swaps the header for the bulk-action bar. Shift-click
+  selects a range.
+- When every row on the page is selected, **Select all N** covers every
+  matching row across pages. Rows unchecked after that are excluded, and
+  **Undo** goes back.
+- Promoted actions are buttons; the rest go under **More actions**.
+- `onAction` receives a `SelectionDescriptor`:
+  `{ type: "include", ids }`, or `{ type: "exclude", ids, total }` after
+  "Select all". It also receives the selected rows that are loaded. Actions
+  without `supportsAllMatching` are disabled after "Select all".
+- A row click opens the record. While rows are selected, it toggles the row
+  instead, as in Shopify.
+- Changing the search or filters clears the selection and returns to page 1.
+  Sorting keeps the selection.
 
-## Sticky header
+## Columns and sorting
 
-```tsx
-<DataTable table={table} stickyOffset={64} />
-```
-
-The header (and the selection bar that replaces it) sticks to the viewport,
-`stickyOffset` below the top - set it to a fixed site nav's height.
+- Click a header to sort: ascending, then descending, then off.
+- Each header menu offers sort, **Filter** (the same picker and state as the
+  chips) and **Hide column**.
+- The ⇅ panel holds "Sort by" and "Columns", where columns are shown, hidden
+  and reordered with buttons. The leftmost column stays first.
+- With `tableId`, column choices persist in this browser.
+- The checkbox and first columns stick while a wide table scrolls sideways.
+- `stickyOffset` keeps the toolbar under a fixed site header. `maxHeight`
+  scrolls rows under a sticky header row.
 
 ## CSV export
 
 ```tsx
-import { rowsToCsv, downloadCsv } from "@/lib/data-table/csv-export"
+import {
+  downloadCsv,
+  exportableRows,
+  rowsToCsv,
+} from "@/lib/data-table/csv-export"
 
 ;<DataTable
   table={table}
-  onExport={() => downloadCsv(rowsToCsv(table, table.getRowModel().rows))}
+  toolbarActions={
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={() =>
+        downloadCsv(
+          rowsToCsv(table.core, exportableRows(table)),
+          "products.csv"
+        )
+      }
+    >
+      Export
+    </Button>
+  }
 />
 ```
 
-In server mode there is no full filtered dataset on the client to serialize -
-implement `onExport` to fetch and download the matching rows yourself, using
-the same selection descriptor bulk actions receive.
+`exportableRows` returns the selection, or every matching row across pages,
+in display order. Values that spreadsheets would run as formulas are
+neutralized. In server mode, export on the server from `list.params` and the
+selection descriptor.
 
-## What's not in v1
+## Accessibility
 
-Column pinning, resizing, drag-to-reorder and row grouping; saved filter
-views; row virtualization is not wired up despite `@tanstack/react-virtual`
-being a listed dependency. All deferred deliberately - see
-`docs/data-table-plan.md` for why and what the data shapes here already
-leave room for.
+- The search box is an ARIA combobox. Arrow keys move through suggestions,
+  Enter picks one, and Escape closes the list, then clears the text.
+- Chips, header menus, pickers and the sort and columns panel all work from
+  the keyboard. Columns reorder with buttons, never by dragging only.
+- A hidden status region announces the result count after a search or
+  filter. The bulk-action bar announces the selection count.
+- Headers set `aria-sort`, checkboxes have 24px hit areas, and no
+  single-key shortcuts are registered.
 
 ## API Reference
 
 <TypeTable
   type={{
-    "useDataTable.mode": { type: '"server" | "client"', default: '"server"' },
+    "useDataTable.filters": { type: "FilterDef<TData>[]" },
+    "useDataTable.mode": { type: '"client" | "server"', default: '"client"' },
+    "useDataTable.list": {
+      type: "ListState",
+      description: "useUrlListState() or useLocalListState(); default: local.",
+    },
+    "useDataTable.getRowId": {
+      type: "(row, index) => string",
+      description: "Required in server mode.",
+    },
     "useDataTable.rowCount": {
       type: "number",
       description: "Required in server mode.",
     },
-    "useDataTable.getRowId": {
-      type: "(row: TData, index: number) => string",
+    "useDataTable.tableId": {
+      type: "string",
+      description: "Persists columns and saved views in this browser.",
     },
-    "Column meta.label": { type: "string" },
-    "Column meta.filter": {
-      type: "{ type, getOptions? }",
-      description:
-        "type is one of text | select | multi-select | date-range | number-range | boolean.",
+    "useDataTable.defaultPageSize": { type: "number", default: "20" },
+    "DataTable.views": { type: "DataTableView[]" },
+    "DataTable.savedViews / onSavedViewsChange": {
+      type: "DataTableView[] / (views) => void",
     },
-    "DataTable.selection": { type: "UseDataTableSelectionResult" },
-    "DataTable.bulkActions": {
-      type: "{ label, icon?, onAction(selection), variant? }[]",
+    "DataTable.search": { type: "false | { placeholder?, label? }" },
+    "DataTable.bulkActions": { type: "BulkAction<TData>[]" },
+    "DataTable.rowActions": { type: "RowAction<TData>[]" },
+    "DataTable.onRowClick": { type: "(row: TData) => void" },
+    "DataTable.resourceName": {
+      type: "{ singular, plural }",
+      default: '{ "item", "items" }',
+    },
+    "DataTable.loading / fetching / error": {
+      type: "boolean / boolean / { message?, onRetry? }",
     },
     "DataTable.stickyOffset": { type: "number | string", default: "0" },
+    "DataTable.maxHeight": { type: "number | string" },
   }}
 />

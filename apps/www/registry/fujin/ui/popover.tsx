@@ -1,6 +1,5 @@
 "use client"
 
-import type * as React from "react"
 import { Popover as PopoverPrimitive } from "@base-ui/react/popover"
 import { XIcon } from "lucide-react"
 
@@ -25,7 +24,7 @@ function PopoverClose(props: PopoverCloseProps) {
 type PopoverContentProps = PopoverPrimitive.Popup.Props &
   Pick<
     PopoverPrimitive.Positioner.Props,
-    "side" | "align" | "sideOffset" | "alignOffset"
+    "side" | "align" | "sideOffset" | "alignOffset" | "anchor"
   > & {
     /** Renders a close button in the top-right corner. */
     showClose?: boolean
@@ -37,6 +36,7 @@ function PopoverContent({
   align = "center",
   sideOffset = 8,
   alignOffset = 0,
+  anchor,
   showClose = false,
   children,
   ...props
@@ -48,6 +48,7 @@ function PopoverContent({
         align={align}
         sideOffset={sideOffset}
         alignOffset={alignOffset}
+        anchor={anchor}
         className="z-50 outline-none"
       >
         <PopoverPrimitive.Popup

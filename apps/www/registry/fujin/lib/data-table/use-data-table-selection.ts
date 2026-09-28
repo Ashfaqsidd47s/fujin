@@ -4,24 +4,74 @@ import * as React from "react"
 
 import type { SelectionDescriptor } from "./types"
 
+export const EMPTY_SELECTION: SelectionDescriptor = { type: "include", ids: [] }
+
+export function isRowSelected(
+  selection: SelectionDescriptor,
+  rowId: string
+): boolean {
+  return selection.type === "include"
+    ? selection.ids.includes(rowId)
+    : !selection.ids.includes(rowId)
+}
+
+/** How many rows the descriptor covers; `total` is the current match count. */
+export function selectedCount(
+  selection: SelectionDescriptor,
+  total = selection.type === "exclude" ? selection.total : 0
+): number {
+  return selection.type === "include"
+    ? selection.ids.length
+    : Math.max(total - selection.ids.length, 0)
+}
+
+/** Turns `ids` on or off, in either descriptor shape. */
+export function setRowsSelected(
+  selection: SelectionDescriptor,
+  ids: readonly string[],
+  selected: boolean
+): SelectionDescriptor {
+  const touched = new Set(ids)
+  // "include" lists what is on; "exclude" lists what is off.
+  const listed = selection.type === "include" ? selected : !selected
+  const rest = selection.ids.filter((id) => !touched.has(id))
+  const next = listed ? [...rest, ...ids] : rest
+  return selection.type === "include"
+    ? { type: "include", ids: next }
+    : { type: "exclude", ids: next, total: selection.total }
+}
+
+/** Ids between two rows of the page, inclusive, in page order (Shift-click). */
+export function idsBetween(
+  orderedIds: readonly string[],
+  anchorId: string,
+  targetId: string
+): string[] {
+  const a = orderedIds.indexOf(anchorId)
+  const b = orderedIds.indexOf(targetId)
+  if (a === -1 || b === -1) return [targetId]
+  const [from, to] = a < b ? [a, b] : [b, a]
+  return orderedIds.slice(from, to + 1)
+}
+
 export type UseDataTableSelectionOptions = {
-  /** Row ids currently loaded for this page, in display order. */
-  pageRowIds: string[]
+  /** Row ids on the current page, in display order. */
+  pageRowIds: readonly string[]
+  /** Rows matching the current query across all pages. */
+  totalRowCount: number
   value?: SelectionDescriptor
   onChange?: (selection: SelectionDescriptor) => void
 }
 
-const EMPTY_SELECTION: SelectionDescriptor = { type: "include", ids: [] }
-
 /**
- * Shopify-style selection: an "include" set until "select all N" is chosen,
- * at which point it flips to "exclude" - every row matching the current
- * filters except whatever gets unchecked afterwards. `selectedCount` and
- * every helper here understand both shapes so callers never branch on
- * `selection.type` themselves.
+ * Shopify-style selection. An `include` set until "Select all N" is chosen;
+ * then `exclude`: every row matching the query except the ones unchecked
+ * afterwards. `useDataTable` builds this for you and clears it whenever the
+ * query changes, since "all matching" would otherwise mean a different set.
  */
 export function useDataTableSelection({
   pageRowIds,
+  totalRowCount,
   value,
   onChange,
 }: UseDataTableSelectionOptions) {
@@ -30,15 +80,13 @@ export function useDataTableSelection({
   const isControlled = value !== undefined
   const selection = isControlled ? value : internal
 
-  // Mirrors the latest resolved selection so two toggles in the same event
-  // handler resolve against each other, not against the same stale
-  // render-time `selection` closure. Written by `set` itself (event-handler
-  // time) and mirrored from the latest render in an effect - never during
-  // render, which React refs must not be used for.
-  const selectionRef = React.useRef(selection)
+  // Two changes in one event (Shift-click, then the row's own handler)
+  // resolve against each other, not the same stale render-time value.
+  const latest = React.useRef(selection)
   React.useEffect(() => {
-    selectionRef.current = selection
+    latest.current = selection
   }, [selection])
+  const anchor = React.useRef<string | null>(null)
 
   const set = React.useCallback(
     (
@@ -46,86 +94,62 @@ export function useDataTableSelection({
         | SelectionDescriptor
         | ((prev: SelectionDescriptor) => SelectionDescriptor)
     ) => {
-      const resolved =
-        typeof next === "function" ? next(selectionRef.current) : next
-      selectionRef.current = resolved
+      const resolved = typeof next === "function" ? next(latest.current) : next
+      latest.current = resolved
       if (!isControlled) setInternal(resolved)
       onChange?.(resolved)
     },
     [isControlled, onChange]
   )
 
-  const isRowSelected = React.useCallback(
-    (rowId: string) =>
-      selection.type === "include"
-        ? selection.ids.includes(rowId)
-        : !selection.ids.includes(rowId),
-    [selection]
-  )
-
-  const selectedCount =
-    selection.type === "include"
-      ? selection.ids.length
-      : Math.max(selection.total - selection.ids.length, 0)
-
+  const count = selectedCount(selection, totalRowCount)
   const isAllPageRowsSelected =
-    pageRowIds.length > 0 && pageRowIds.every(isRowSelected)
+    pageRowIds.length > 0 &&
+    pageRowIds.every((id) => isRowSelected(selection, id))
   const isSomePageRowsSelected =
-    !isAllPageRowsSelected && pageRowIds.some(isRowSelected)
+    !isAllPageRowsSelected &&
+    pageRowIds.some((id) => isRowSelected(selection, id))
+  const isAllMatchingSelected =
+    selection.type === "exclude" && selection.ids.length === 0
 
   const toggleRow = React.useCallback(
-    (rowId: string, checked: boolean) => {
-      set((prev) => {
-        if (prev.type === "include") {
-          const ids = checked
-            ? [...new Set([...prev.ids, rowId])]
-            : prev.ids.filter((id) => id !== rowId)
-          return { type: "include", ids }
-        }
-        const ids = checked
-          ? prev.ids.filter((id) => id !== rowId)
-          : [...new Set([...prev.ids, rowId])]
-        return { type: "exclude", ids, total: prev.total }
-      })
-    },
-    [set]
-  )
-
-  const togglePage = React.useCallback(
-    (checked: boolean) => {
-      set((prev) => {
-        if (prev.type === "include") {
-          const ids = checked
-            ? [...new Set([...prev.ids, ...pageRowIds])]
-            : prev.ids.filter((id) => !pageRowIds.includes(id))
-          return { type: "include", ids }
-        }
-        const ids = checked
-          ? prev.ids.filter((id) => !pageRowIds.includes(id))
-          : [...new Set([...prev.ids, ...pageRowIds])]
-        return { type: "exclude", ids, total: prev.total }
-      })
+    (rowId: string, selected: boolean, options?: { range?: boolean }) => {
+      const ids =
+        options?.range && anchor.current
+          ? idsBetween(pageRowIds, anchor.current, rowId)
+          : [rowId]
+      anchor.current = rowId
+      set((prev) => setRowsSelected(prev, ids, selected))
     },
     [pageRowIds, set]
   )
 
-  /** "Select all {total} items" - every row matching the filters, nothing excluded yet. */
-  const selectAllMatching = React.useCallback(
-    (total: number) => set({ type: "exclude", ids: [], total }),
-    [set]
+  const togglePage = React.useCallback(
+    (selected: boolean) => {
+      anchor.current = null
+      set((prev) => setRowsSelected(prev, pageRowIds, selected))
+    },
+    [pageRowIds, set]
   )
 
-  const clear = React.useCallback(
-    () => set({ type: "include", ids: [] }),
-    [set]
-  )
+  /** "Select all N": every row matching the query, nothing excluded yet. */
+  const selectAllMatching = React.useCallback(() => {
+    set({ type: "exclude", ids: [], total: totalRowCount })
+  }, [set, totalRowCount])
+
+  const clear = React.useCallback(() => {
+    anchor.current = null
+    set(EMPTY_SELECTION)
+  }, [set])
 
   return {
     selection,
-    selectedCount,
-    isRowSelected,
+    selectedCount: count,
+    hasSelection: count > 0,
+    isRowSelected: (rowId: string) => isRowSelected(selection, rowId),
     isAllPageRowsSelected,
     isSomePageRowsSelected,
+    isAllMatchingSelected,
     toggleRow,
     togglePage,
     selectAllMatching,

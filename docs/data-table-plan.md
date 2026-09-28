@@ -4,6 +4,47 @@ _Created 2026-09-21. Full spec for the Phase 2 flagship (`docs/plan.md` §7).
 Decisions below came out of a requirements session; each row says what was
 picked and why, so this file can be revisited without re-litigating it._
 
+## Revision 2026-09-29: rebuilt around a list query
+
+The first build did not work in the browser. Picking a column in the search
+bar wrote the picked item into the input as JSON, and no filter was applied:
+Base UI's Combobox treats the picked item as the input's value. It also failed
+`tsc` in the Vite template (`noUnusedLocals`, no `process` types). The table
+was rebuilt, borrowing the design of a working in-house table (a
+Shopify-style admin kit) and checked against current Shopify and GitHub
+behaviour. That research lives outside the repo. Its main finding: the
+Shopify admin's Products and Orders pages no longer use Polaris
+`IndexFilters` tabs. They use one search bar with a view menu, filter chips
+and typed `field:value` terms, which is close to GitHub's.
+
+These rows replace or extend the decisions in §2:
+
+| #   | Decision                                                                                                                                                                                                    | Why                                                                                                                                                                                  |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| R1  | Filters are `FilterDef`s (`enum`, `async`, `text`, `boolean`, `number-range`, `date-range`) declared separately from columns. Values are `{ op, ... }` (`in`, `not_in`, `contains`, `eq`, `between`).       | Shopify filters on things that aren't columns ("Tagged with"). An explicit `op` carries "is not" and ranges, which TanStack's per-column `filterFn` values couldn't express cleanly. |
+| R2  | One `ListState` (`q`, `sort`, `filters`) is the state for the bar, chips, header menus, sort panel and views. Client mode filters `data` with it before TanStack sorts and pages.                           | One source of truth, the same shape in the URL and in an API request. TanStack's column-filter features are no longer registered.                                                    |
+| R3  | The search box is a hand-rolled ARIA 1.2 combobox (`use-filter-search.ts`), not Base UI Combobox.                                                                                                           | It has to hold free text, turn qualifiers into chips and offer mixed suggestions (filters, values, views). A value-picking combobox fights all three; that is the bug that broke v1. |
+| R4  | GitHub qualifier syntax in the box: `key:a,b`, `-key:a`, `key:"two words"`, `key:10..20`, `key:>=10`. Values match a unique prefix. Unknown terms stay as text with a warning.                              | Shopify's current bar and GitHub both accept typed terms. Power users type; everyone else uses chips. Both write the same state.                                                     |
+| R5  | URL and API parameters are flat, not JSON: `key=a,b`, `key_not=`, `key_gte=` / `key_lte=`, plus `q`, `sort` (`-field` = descending) and `page`. `nuqs` stays.                                               | Readable, shareable links that double as the backend contract.                                                                                                                       |
+| R6  | Saved views are in scope (reverses decision 6). A view menu sits in the bar with Save as, Update, Rename, Duplicate and Delete. Views live in localStorage by default, or on a server through `savedViews`. | The current Shopify admin makes views the entry point of the bar.                                                                                                                    |
+| R7  | Column order is in scope, through buttons in the "Sort and columns" panel. The first column stays first, visible and sticky next to the checkbox. Pinning, resizing and grouping are still out.             | Shopify's display panel reorders with up/down controls. Drag-only reordering would fail WCAG 2.5.7.                                                                                  |
+| R8  | Single-column sort (`sort=field` / `-field`), not multi-sort.                                                                                                                                               | Neither Shopify nor GitHub offers multi-sort, and one `sort` parameter is what most APIs accept.                                                                                     |
+| R9  | Bulk actions choose `promoted` themselves (replaces decision 10's fixed 2). Actions without `supportsAllMatching` are disabled after "Select all N".                                                        | Matches Polaris. An action that only works on loaded ids must not run on "all matching".                                                                                             |
+| R10 | `mode` defaults to `"client"`. Server mode's types require `getRowId` and `rowCount`.                                                                                                                       | The v1 runtime warnings relied on `process.env`, which Vite apps don't type. Type-level requirements catch the mistake earlier.                                                      |
+| R11 | Changing `q` or filters clears the selection and returns to page 1. Sorting keeps both.                                                                                                                     | Otherwise "Select all N" would quietly mean a different set of rows.                                                                                                                 |
+
+The file layout in §4 below is historical. The current one:
+
+```txt
+lib/data-table/        types, filter-codec (URL params, matching, sort), query-syntax,
+                       filter-summary, use-list-state, use-filter-search, use-filter-options,
+                       use-data-table, use-data-table-selection, use-data-table-views,
+                       use-persisted-state, csv-export, features
+components/data-table/ data-table, filter-bar, filter-chip, filter-picker, view-menu,
+                       display-options, column-header, bulk-actions, row-actions,
+                       pagination, states
+```
+
 ## 1. Goal
 
 Ship a data-table composite that matches the two reference systems the brief

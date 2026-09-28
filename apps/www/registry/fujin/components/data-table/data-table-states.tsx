@@ -1,4 +1,5 @@
-import { AlertCircleIcon, InboxIcon } from "lucide-react"
+import type * as React from "react"
+import { AlertCircleIcon, InboxIcon, SearchXIcon } from "lucide-react"
 
 import { Skeleton } from "@/registry/fujin/ui/skeleton"
 import { TableCell, TableRow } from "@/registry/fujin/ui/table"
@@ -7,13 +8,20 @@ export type DataTableEmptyStateProps = {
   colSpan: number
   title?: string
   description?: string
+  /** A search or filter produced no rows (as opposed to there being no data). */
+  filtered?: boolean
+  /** Rendered under the text: "Clear filters", "Add product". */
+  action?: React.ReactNode
 }
 
 function DataTableEmptyState({
   colSpan,
   title = "No results",
   description,
+  filtered = false,
+  action,
 }: DataTableEmptyStateProps) {
+  const Icon = filtered ? SearchXIcon : InboxIcon
   return (
     <TableRow className="hover:bg-transparent">
       <TableCell
@@ -21,9 +29,10 @@ function DataTableEmptyState({
         className="h-32 text-center whitespace-normal"
       >
         <div className="flex flex-col items-center gap-1 text-muted-foreground">
-          <InboxIcon className="size-6" />
+          <Icon aria-hidden className="size-6" />
           <span className="font-medium text-foreground">{title}</span>
           {description ? <span className="text-sm">{description}</span> : null}
+          {action ? <div className="mt-2">{action}</div> : null}
         </div>
       </TableCell>
     </TableRow>
@@ -48,7 +57,7 @@ function DataTableErrorState({
         className="h-32 text-center whitespace-normal"
       >
         <div className="flex flex-col items-center gap-2 text-muted-foreground">
-          <AlertCircleIcon className="size-6 text-destructive" />
+          <AlertCircleIcon aria-hidden className="size-6 text-destructive" />
           <span className="font-medium text-foreground">{message}</span>
           {onRetry ? (
             <button
@@ -68,17 +77,20 @@ function DataTableErrorState({
 export type DataTableLoadingStateProps = {
   colSpan: number
   rows?: number
+  /** "Loading products". */
+  label?: string
 }
 
 function DataTableLoadingState({
   colSpan,
   rows = 5,
+  label = "Loading rows",
 }: DataTableLoadingStateProps) {
   return (
     <>
       <TableRow className="sr-only hover:bg-transparent" aria-live="polite">
         <TableCell colSpan={colSpan} role="status">
-          Loading rows
+          {label}
         </TableCell>
       </TableRow>
       {Array.from({ length: rows }).map((_, index) => (

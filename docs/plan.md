@@ -185,15 +185,14 @@ menubar, tabs, accordion, collapsible, scroll-area, progress, meter, toast
 Also: a shared overlay-stack test matrix (dialog-in-dropdown, combobox-in-dialog, and so on).
 
 **Phase 2: data.** `data-table` as the flagship. Full spec, decisions and
-build order in `docs/data-table-plan.md`. Summary: TanStack Table v9,
-headless `useDataTable` (server-driven by default, client-mode escape
-hatch), multi-sort, a Shopify-style search bar (combobox that turns picked
-columns into pills) unified with GitHub-style per-column header filters,
-row selection with a cross-page "select all N" descriptor driving bulk
-actions and CSV export, URL state via `nuqs`, and a header/action-bar that
-sticks to the viewport (not just the table's scroll container). Column
-pinning/resizing/reordering/grouping, saved views and virtualization-by-
-default are explicitly deferred past v1. Needs 9 new primitives first
+build order in `docs/data-table-plan.md` (see its 2026-09-29 revision).
+Summary: TanStack Table v9 with a headless `useDataTable` (client mode by
+default, server mode for APIs that page). One Shopify-admin search bar holds
+a view menu, filter chips and GitHub-style typed qualifiers, all writing one
+list query; header menus filter through the same state. Saved views, a sort
+and columns panel with button reordering, cross-page "select all N" driving
+bulk actions and CSV export, and flat URL params via `nuqs`. Column
+pinning, resizing and grouping, and virtualization by default, are deferred. Needs 9 new primitives first
 (`table`, `checkbox`, `popover`, `command`, `dropdown-menu`, `badge`,
 `tooltip`, `separator`, `skeleton`) since only `spinner`/`button`/`input`/
 `field` exist today.

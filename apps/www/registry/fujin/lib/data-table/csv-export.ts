@@ -2,6 +2,8 @@ import type { ReactTable, Row, RowData } from "@tanstack/react-table"
 
 import type { DataTableFeatures } from "./features"
 import type { SelectionDescriptor } from "./types"
+import type { DataTableInstance } from "./use-data-table"
+import { isRowSelected } from "./use-data-table-selection"
 
 function toCsvValue(value: unknown): string {
   if (value == null) return ""
@@ -9,7 +11,7 @@ function toCsvValue(value: unknown): string {
   // Excel/Sheets treats a leading =, +, -, @, tab or CR as a formula trigger
   // on open (CSV/formula injection) - neutralize it before quote-escaping.
   if (/^[=+\-@\t\r]/.test(text)) text = `'${text}`
-  return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text
+  return /[",\n\r]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text
 }
 
 /**
@@ -26,7 +28,14 @@ export function rowsToCsv<TData extends RowData>(
   const columns = table.getVisibleLeafColumns()
 
   const header = columns
-    .map((column) => toCsvValue(column.columnDef.meta?.label ?? column.id))
+    .map((column) =>
+      toCsvValue(
+        column.columnDef.meta?.label ??
+          (typeof column.columnDef.header === "string"
+            ? column.columnDef.header
+            : column.id)
+      )
+    )
     .join(",")
 
   const lines = rows.map((row) =>
@@ -43,7 +52,8 @@ export function downloadCsv(csv: string, filename = "export.csv") {
   link.href = url
   link.download = filename
   link.click()
-  URL.revokeObjectURL(url)
+  // Revoking synchronously can cancel the download in some browsers.
+  window.setTimeout(() => URL.revokeObjectURL(url), 0)
 }
 
 /**
@@ -54,3 +64,16 @@ export function downloadCsv(csv: string, filename = "export.csv") {
 export type ServerCsvExportHandler = (
   selection: SelectionDescriptor
 ) => void | Promise<void>
+
+/**
+ * Client mode: the rows an export should contain, in display order - the
+ * selection when there is one, otherwise every row matching the query
+ * (across all pages, not only the one on screen).
+ */
+export function exportableRows<TData extends RowData>(
+  table: DataTableInstance<TData>
+): Row<DataTableFeatures, TData>[] {
+  const rows = table.core.getSortedRowModel().rows
+  if (!table.selection.hasSelection) return rows
+  return rows.filter((row) => isRowSelected(table.selection.selection, row.id))
+}
