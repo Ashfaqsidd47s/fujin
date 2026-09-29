@@ -34,7 +34,14 @@ export type DataTableProps<TData extends RowData> = {
   /** Show the search and filter bar. Default true. */
   toolbar?: boolean
   /** `false` turns off free-text search (the bar then only adds filters). */
-  search?: false | { placeholder?: string; label?: string }
+  search?:
+    | false
+    | {
+        placeholder?: string
+        label?: string
+        /** Pause after typing before the text searches. Default 300 ms. */
+        debounceMs?: number
+      }
   /** Built-in views ("All", "Active", ...), shown in the menu at the start of the bar. */
   views?: readonly DataTableView[]
   /** Saved views, controlled (store them on your server to share them). Default: this browser, under the table's `tableId`. */

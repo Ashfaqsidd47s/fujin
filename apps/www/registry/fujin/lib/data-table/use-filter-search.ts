@@ -22,7 +22,7 @@ import type {
   FilterValues,
   ListState,
 } from "./types"
-import { useFilterOptions } from "./use-filter-options"
+import { useDebouncedSearch, useFilterOptions } from "./use-filter-options"
 
 /*
  * The behaviour of the search box inside the filter bar, as an ARIA 1.2
@@ -261,6 +261,17 @@ export function useFilterSearch({
     asyncDef !== undefined
   )
   const editingQualifier = focused && context.token?.kind === "qualifier"
+  // The word being typed, and the text the list matches: it narrows once
+  // typing pauses. Typing `status:` or a comma switches to that field's values
+  // at once; only narrowing them by the letters that follow waits.
+  const word = context.token?.kind === "text" ? context.keyPart.trim() : ""
+  const needle = useDebouncedSearch(
+    context.valuePart !== null ? partial : word,
+    undefined,
+    context.valuePart !== null
+      ? `value:${context.keyPart}:${prefixKey}`
+      : "text"
+  )
 
   // Free text commits after a pause; a finished qualifier (caret moved past
   // it) at once. Qualifiers that don't parse stay in the box, with a warning,
@@ -354,11 +365,11 @@ export function useFilterSearch({
             )} `
           ),
       })
-      const needle = partial.toLowerCase()
+      const typed = needle.value.toLowerCase()
       const matches = (option: FilterOption) =>
         !prefixValues.includes(option.value) &&
-        (option.label.toLowerCase().includes(needle) ||
-          option.value.toLowerCase().includes(needle))
+        (option.label.toLowerCase().includes(typed) ||
+          option.value.toLowerCase().includes(typed))
 
       switch (activeDef.type) {
         case "enum":
@@ -419,13 +430,13 @@ export function useFilterSearch({
       return { hints, groups }
     }
 
-    const word = context.token?.kind === "text" ? context.keyPart.trim() : ""
+    const typed = needle.value
     const ordered = [
       ...defs.filter((def) => def.pinned),
       ...defs.filter((def) => !def.pinned),
     ]
     const fields = ordered
-      .filter((def) => !word || matchesWord(def, word))
+      .filter((def) => !typed || matchesWord(def, typed))
       .map((def) => ({
         kind: "field" as const,
         id: `field-${def.key}`,
@@ -438,10 +449,10 @@ export function useFilterSearch({
     if (fields.length > 0) {
       groups.push({ id: "fields", heading: "Filters", items: fields })
     }
-    if (!word) return { hints, groups }
+    if (!typed) return { hints, groups }
 
     // Typing a view's name offers the view.
-    const viewNeedle = word.toLowerCase()
+    const viewNeedle = typed.toLowerCase()
     const matchingViews = (views ?? [])
       .filter((view) => view.label.toLowerCase().includes(viewNeedle))
       .map((view) => ({
@@ -460,12 +471,12 @@ export function useFilterSearch({
     }
 
     // "dr" -> "Status is Draft": option values whose label matches the word.
-    const needle = word.toLowerCase()
+    const valueNeedle = typed.toLowerCase()
     const values: FilterSuggestionGroup["items"] = []
     for (const def of ordered) {
       const options = def.type === "enum" ? def.options : booleanOptions(def)
       for (const option of options) {
-        if (!option.label.toLowerCase().includes(needle)) continue
+        if (!option.label.toLowerCase().includes(valueNeedle)) continue
         values.push({
           kind: "value",
           id: `match-${def.key}-${option.value}`,
@@ -499,14 +510,15 @@ export function useFilterSearch({
     context,
     defs,
     list.filters,
+    needle.value,
     onOpenFilter,
-    partial,
     prefixValues,
     replaceToken,
     setText,
     showFilters,
     onSelectView,
     views,
+    word,
   ])
 
   const selectable = React.useMemo(
@@ -549,6 +561,17 @@ export function useFilterSearch({
       event.preventDefault()
       setDismissed(true)
       onFocusLastChip()
+      return
+    }
+    // Arrows act on the list: first catch it up with what was typed.
+    if (
+      needle.pending &&
+      (event.key === "ArrowDown" || event.key === "ArrowUp")
+    ) {
+      event.preventDefault()
+      needle.flush()
+      setDismissed(false)
+      setHighlight(0)
       return
     }
     if (!open && event.key === "ArrowDown" && selectable.length > 0) {

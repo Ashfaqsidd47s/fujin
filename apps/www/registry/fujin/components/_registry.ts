@@ -51,6 +51,7 @@ export const components: RegistryItemInput[] = [
         "data-table.tsx",
         "data-table-filter-bar.tsx",
         "data-table-filter-chip.tsx",
+        "data-table-filter-overflow.tsx",
         "data-table-filter-picker.tsx",
         "data-table-view-menu.tsx",
         "data-table-display-options.tsx",
@@ -218,6 +219,7 @@ const table = useDataTable({
         a11y: [
           "The search box is an ARIA 1.2 combobox: focus stays in the input, arrows move through suggestions (announced via aria-activedescendant), Enter picks, Escape closes then clears.",
           "Chips are buttons: Enter opens the picker with current values checked, Delete/Backspace removes, Left/Right move between chips and back into the box; Backspace at the start of the box moves into the chips.",
+          'Chips that no longer fit fold into one "N filters" pill (a popover trigger) instead of wrapping the bar: its chips keep the same keys, and focus follows the chip it was on to the pill and back when the bar folds or unfolds.',
           'A visually hidden `role="status"` announces the result count after a search or filter, and the bulk-action bar announces the selection count.',
           "Sortable headers set `aria-sort` on the `<th>`; header menus, the sort/columns panel and pickers are reachable by keyboard, and columns reorder with buttons, never drag only (WCAG 2.5.7).",
           "Checkboxes get a 24px hit area (WCAG 2.5.8); no single-key shortcuts are registered (WCAG 2.1.4).",

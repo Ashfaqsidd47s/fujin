@@ -17,6 +17,9 @@ const optionCache = new Map<
   { at: number; options: readonly FilterOption[] }
 >()
 const seenOptions = new Map<string, Map<string, FilterOption>>()
+// `resolveOptions` calls in flight, so chips showing the same values (the
+// search bar measures a hidden copy of each) share one request.
+const resolving = new Map<string, Promise<readonly FilterOption[]>>()
 
 function remember(filterKey: string, options: readonly FilterOption[]) {
   let known = seenOptions.get(filterKey)
@@ -34,6 +37,39 @@ export function useDebouncedValue<T>(value: T, delay: number): T {
     return () => window.clearTimeout(id)
   }, [value, delay])
   return debounced
+}
+
+/** How long typing must pause before a list of options narrows. */
+export const OPTION_SEARCH_DEBOUNCE_MS = 250
+
+/**
+ * Search text for filtering a list, settled after a pause in typing.
+ * `pending` says the list still shows an older search; `flush` catches up
+ * at once, for keys that act on the list (arrows, Enter). A new `scope` (a
+ * different field being searched) starts from the typed text immediately.
+ */
+export function useDebouncedSearch(
+  text: string,
+  delay: number = OPTION_SEARCH_DEBOUNCE_MS,
+  scope: string = ""
+) {
+  const [settled, setSettled] = React.useState({ scope, text })
+  const value = settled.scope === scope ? settled.text : text
+
+  React.useEffect(() => {
+    if (settled.scope === scope && settled.text === text) return
+    const id = window.setTimeout(
+      () => setSettled({ scope, text }),
+      settled.scope === scope ? delay : 0
+    )
+    return () => window.clearTimeout(id)
+  }, [delay, scope, settled, text])
+
+  return {
+    value,
+    pending: value !== text,
+    flush: () => setSettled({ scope, text }),
+  }
 }
 
 type OptionsState = {
@@ -111,16 +147,31 @@ export function useResolvedOptions(
 
   React.useEffect(() => {
     if (!resolve || missingKey === "") return
-    const controller = new AbortController()
-    resolve(missingKey.split("\u0000"), controller.signal).then(
+    const requestKey = `${def.key}\u0000\u0000${missingKey}`
+    let request = resolving.get(requestKey)
+    if (!request) {
+      // Shared, so no one caller may abort it; each ignores a late answer.
+      request = resolve(
+        missingKey.split("\u0000"),
+        new AbortController().signal
+      )
+      resolving.set(requestKey, request)
+      request.then(
+        (options) => remember(def.key, options),
+        () => {}
+      )
+      request.finally(() => resolving.delete(requestKey)).catch(() => {})
+    }
+    let cancelled = false
+    request.then(
       (options) => {
-        if (controller.signal.aborted) return
-        remember(def.key, options)
-        setResolved(options)
+        if (!cancelled) setResolved(options)
       },
       () => {}
     )
-    return () => controller.abort()
+    return () => {
+      cancelled = true
+    }
   }, [def.key, missingKey, resolve])
 
   // Rebuilt when `values` change: `known` is filled in place as options load.

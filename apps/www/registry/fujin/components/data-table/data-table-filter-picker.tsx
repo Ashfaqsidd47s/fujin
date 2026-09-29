@@ -16,6 +16,7 @@ import type {
   TextFilterDef,
 } from "@/registry/fujin/lib/data-table/types"
 import {
+  useDebouncedSearch,
   useFilterOptions,
   useResolvedOptions,
 } from "@/registry/fujin/lib/data-table/use-filter-options"
@@ -93,10 +94,24 @@ type OptionListProps = PickerProps<
   status?: "loading" | "error" | "ready"
 }
 
+/** Options whose label or description contains the search text. */
+function matchOptions(
+  options: readonly FilterOption[],
+  search: string
+): readonly FilterOption[] {
+  const needle = search.trim().toLowerCase()
+  if (!needle) return options
+  return options.filter(
+    (option) =>
+      option.label.toLowerCase().includes(needle) ||
+      option.description?.toLowerCase().includes(needle)
+  )
+}
+
 /**
  * Checkboxes (or radios, for single choice) in a listbox with a search box
  * on top. Arrow keys move, Enter or Space toggles, and focus never leaves the
- * search box, so typing narrows the list at any time.
+ * search box, so typing narrows the list at any time (once typing pauses).
  */
 function OptionList({
   def,
@@ -118,23 +133,22 @@ function OptionList({
   const [localSearch, setLocalSearch] = React.useState("")
   const search = remote ? (remoteSearch ?? "") : localSearch
   const [highlight, setHighlight] = React.useState(0)
+  // The list narrows once typing pauses (a remote search debounces itself).
+  const settled = useDebouncedSearch(search)
 
-  const listed = React.useMemo(() => {
-    const all = [
+  const all = React.useMemo(
+    () => [
       ...extraSelected.filter(
         (option) => !options.some((o) => o.value === option.value)
       ),
       ...options,
-    ]
-    if (remote) return all
-    const needle = search.trim().toLowerCase()
-    if (!needle) return all
-    return all.filter(
-      (option) =>
-        option.label.toLowerCase().includes(needle) ||
-        option.description?.toLowerCase().includes(needle)
-    )
-  }, [extraSelected, options, remote, search])
+    ],
+    [extraSelected, options]
+  )
+  const listed = React.useMemo(
+    () => (remote ? all : matchOptions(all, settled.value)),
+    [all, remote, settled.value]
+  )
 
   const active = Math.min(highlight, Math.max(listed.length - 1, 0))
 
@@ -156,6 +170,29 @@ function OptionList({
   }
 
   const onKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    // Keys that act on the list first catch it up with what was typed.
+    if (
+      !remote &&
+      settled.pending &&
+      (event.key === "ArrowDown" ||
+        event.key === "ArrowUp" ||
+        event.key === "Enter")
+    ) {
+      settled.flush()
+      const fresh = matchOptions(all, search)
+      if (event.key === "Enter") {
+        const option = fresh[0]
+        if (!option) return
+        event.preventDefault()
+        toggle(option.value)
+        return
+      }
+      event.preventDefault()
+      setHighlight(
+        event.key === "ArrowDown" ? 0 : Math.max(fresh.length - 1, 0)
+      )
+      return
+    }
     if (event.key === "ArrowDown") {
       event.preventDefault()
       setHighlight((active + 1) % Math.max(listed.length, 1))

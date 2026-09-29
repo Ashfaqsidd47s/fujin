@@ -3,7 +3,10 @@
 import * as React from "react"
 import { XIcon } from "lucide-react"
 
-import { filterSummary } from "@/registry/fujin/lib/data-table/filter-summary"
+import {
+  filterSummary,
+  type FilterSummary,
+} from "@/registry/fujin/lib/data-table/filter-summary"
 import type {
   FilterDef,
   FilterValue,
@@ -14,6 +17,7 @@ import {
   Popover,
   PopoverContent,
   PopoverTrigger,
+  type PopoverContentProps,
 } from "@/registry/fujin/ui/popover"
 
 import { DataTableFilterPicker } from "./data-table-filter-picker"
@@ -29,9 +33,52 @@ export type DataTableFilterChipProps = {
   /** Left / Right on the chip: the neighbouring chip, or the search box. */
   onNavigate?: (direction: -1 | 1) => void
   /** Where focus goes when the picker closes. Default: back to the chip. */
-  finalFocus?: React.RefObject<HTMLElement | null>
+  finalFocus?: PopoverContentProps["finalFocus"]
   ref?: React.Ref<HTMLButtonElement>
 }
+
+/** A chip's summary; `null` while the filter is being added and has no value. */
+function useFilterChipSummary(
+  def: FilterDef<never>,
+  value: FilterValue | undefined
+) {
+  const values =
+    value && (value.op === "in" || value.op === "not_in") ? value.values : []
+  const resolved = useResolvedOptions(def, values)
+  return value ? filterSummary(def, value, { resolved }) : null
+}
+
+/** "Status is" and the tinted "Active, Draft": the text of every chip. */
+function FilterChipLabel({
+  def,
+  summary,
+}: {
+  def: FilterDef<never>
+  summary: FilterSummary | null
+}) {
+  // A filter being added reads "Status is" until a value is picked.
+  const pendingVerb =
+    def.type === "enum" || def.type === "async" || def.type === "boolean"
+      ? " is"
+      : ""
+  return (
+    <>
+      <span className="shrink-0 text-foreground">
+        {def.label}
+        {summary ? ` ${summary.verb}` : pendingVerb}
+      </span>
+      {summary ? (
+        <span className="min-w-0 truncate rounded-sm bg-primary/10 px-1 font-medium text-foreground">
+          {summary.detail}
+        </span>
+      ) : null}
+    </>
+  )
+}
+
+const CHIP =
+  "inline-flex h-7 max-w-full min-w-0 items-center rounded-md bg-muted text-sm"
+const CHIP_FACE = "flex h-full min-w-0 items-center gap-1 rounded-md px-2"
 
 /**
  * An applied filter inside the search bar, as in the Shopify admin:
@@ -50,15 +97,7 @@ function DataTableFilterChip({
   finalFocus,
   ref,
 }: DataTableFilterChipProps) {
-  const values =
-    value && (value.op === "in" || value.op === "not_in") ? value.values : []
-  const resolved = useResolvedOptions(def, values)
-  const summary = value ? filterSummary(def, value, { resolved }) : null
-  // A filter being added reads "Status is" until a value is picked.
-  const pendingVerb =
-    def.type === "enum" || def.type === "async" || def.type === "boolean"
-      ? " is"
-      : ""
+  const summary = useFilterChipSummary(def, value)
 
   const onKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>) => {
     if (event.key === "Backspace" || event.key === "Delete") {
@@ -76,7 +115,10 @@ function DataTableFilterChip({
         data-slot="data-table-filter-chip"
         data-filter={def.key}
         data-state={open ? "open" : "closed"}
-        className="group/chip inline-flex h-7 max-w-full min-w-0 items-center rounded-md bg-muted text-sm data-[state=open]:ring-2 data-[state=open]:ring-ring"
+        className={cn(
+          CHIP,
+          "group/chip data-[state=open]:ring-2 data-[state=open]:ring-ring"
+        )}
       >
         <PopoverTrigger
           ref={ref}
@@ -88,17 +130,12 @@ function DataTableFilterChip({
               : `${def.label}: choose a value`
           }
           title={summary?.text}
-          className="flex h-full min-w-0 items-center gap-1 rounded-md px-2 outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className={cn(
+            CHIP_FACE,
+            "outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          )}
         >
-          <span className="shrink-0 text-foreground">
-            {def.label}
-            {summary ? ` ${summary.verb}` : pendingVerb}
-          </span>
-          {summary ? (
-            <span className="min-w-0 truncate rounded-sm bg-primary/10 px-1 font-medium text-foreground">
-              {summary.detail}
-            </span>
-          ) : null}
+          <FilterChipLabel def={def} summary={summary} />
         </PopoverTrigger>
         {summary ? (
           <button
@@ -119,6 +156,7 @@ function DataTableFilterChip({
         ) : null}
       </span>
       <PopoverContent
+        data-filter-popup=""
         align="start"
         className="w-auto p-0"
         finalFocus={finalFocus ?? true}
@@ -134,4 +172,32 @@ function DataTableFilterChip({
   )
 }
 
-export { DataTableFilterChip }
+/**
+ * An invisible, inert copy of a chip at its natural width. The filter bar
+ * lays these out off-screen to learn whether the real chips fit on one line.
+ */
+function DataTableFilterChipGhost({
+  def,
+  value,
+}: {
+  def: FilterDef<never>
+  value: FilterValue | undefined
+}) {
+  const summary = useFilterChipSummary(def, value)
+  return (
+    <span className={cn(CHIP, "max-w-none shrink-0")}>
+      <span className={CHIP_FACE}>
+        <FilterChipLabel def={def} summary={summary} />
+      </span>
+      {/* The remove button: w-6 pulled in by -ml-1. */}
+      {summary ? <span className="w-5" /> : null}
+    </span>
+  )
+}
+
+export {
+  DataTableFilterChip,
+  DataTableFilterChipGhost,
+  FilterChipLabel,
+  useFilterChipSummary,
+}

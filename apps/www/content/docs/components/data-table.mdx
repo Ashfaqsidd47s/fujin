@@ -113,9 +113,16 @@ It works like the search bar in the Shopify admin's Products and Orders pages:
   Draft**, and a view whose name matches the text is offered as well.
 - **Chips** read "Status is Active, Draft". Click one to edit it; Delete or
   Backspace removes it. ← and → move between chips and back into the box.
-- **Free text** searches after a short pause, or on Enter. In client mode
-  every word must appear somewhere in the row; `"quoted phrases"` stay
-  together.
+- **The bar stays one line tall.** When the chips no longer leave room to
+  type, they fold into one **3 filters** pill. It opens every chip in a
+  popover: click one to edit it there, × removes it, and **Add filter** and
+  **Clear all** sit at the bottom. The chips unfold once they fit again.
+- **Suggestions and picker options** narrow once typing pauses (250 ms),
+  not on every key. The arrow keys and Enter catch the list up first, so a
+  quick Enter still picks what you typed.
+- **Free text** searches after a pause (`search.debounceMs`, default 300 ms),
+  or on Enter. In client mode every word must appear somewhere in the row;
+  `"quoted phrases"` stay together.
 - **ⓧ** returns to the selected view's own query.
 
 GitHub-style qualifiers work too. They turn into chips when you type a space
@@ -335,7 +342,9 @@ selection descriptor.
     "DataTable.savedViews / onSavedViewsChange": {
       type: "DataTableView[] / (views) => void",
     },
-    "DataTable.search": { type: "false | { placeholder?, label? }" },
+    "DataTable.search": {
+      type: "false | { placeholder?, label?, debounceMs? }",
+    },
     "DataTable.bulkActions": { type: "BulkAction<TData>[]" },
     "DataTable.rowActions": { type: "RowAction<TData>[]" },
     "DataTable.onRowClick": { type: "(row: TData) => void" },
