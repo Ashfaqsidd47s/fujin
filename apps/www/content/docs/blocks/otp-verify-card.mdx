@@ -1,0 +1,214 @@
+---
+title: OTP Verify Card
+description: A verification-code card whose slots become the loader. They orbit, flip, spin or wave while the code is checked, then pop green or shake red.
+component: otp-verify-card
+status: new
+---
+
+<ComponentPreview name="otp-verify-card-demo" />
+
+## Installation
+
+```package-install
+npx shadcn@latest add @fujin/otp-verify-card
+```
+
+This pulls in `otp-field` and `button`. The motion runs on the Web Animations
+API, so there is no CSS to add.
+
+## Usage
+
+```tsx
+import { OtpVerifyCard } from "@/components/otp-verify-card"
+```
+
+```tsx
+<OtpVerifyCard
+  length={6}
+  groupSize={3}
+  onVerify={async (code) => {
+    const res = await fetch("/api/verify", {
+      method: "POST",
+      body: JSON.stringify({ code }),
+    })
+    return res.ok || { ok: false, message: "That code has expired." }
+  }}
+  onSuccess={() => router.push("/dashboard")}
+  onResend={() => fetch("/api/resend", { method: "POST" })}
+/>
+```
+
+## How it works
+
+1. The user fills the slots. In `submitMode="auto"` (the default) verification
+   starts on the last character or a full paste; in `"manual"` it waits for
+   the Verify button or Enter.
+2. The slots lock (read-only, focus stays) and become the loader. With the
+   default `orbit` variant they spiral out of the row into a ring, orbit, and
+   glide back. The card grows to fit the ring and shrinks again after.
+3. `onVerify` runs at the same time. The result is only shown once the loader
+   has finished at least `minRotations` full rotations. A fast server still
+   gets the whole motion; a slow one keeps it going. A rotation is never cut
+   off halfway.
+4. **Success:** the slots turn green with a staggered pop and `onSuccess`
+   runs. **Error:** the row shakes, the message is announced, and focus
+   returns to the first slot. The code stays so a typo can be fixed (pass
+   `clearOnError` to wipe it).
+
+## Returning a result
+
+`onVerify` can return a value or throw:
+
+| Return                             | Outcome                        |
+| ---------------------------------- | ------------------------------ |
+| `true`, `undefined`, anything else | Success                        |
+| `false`                            | Error with `errorMessage`      |
+| `{ ok: false, message }`           | Error with `message`           |
+| throws `Error(message)`            | Error with the error's message |
+
+## Animation
+
+Every timing value can be changed through `animation`:
+
+```tsx
+<OtpVerifyCard
+  onVerify={verify}
+  animation={{
+    variant: "flip", // "orbit" | "flip" | "spin" | "wave" | "pulse"
+    duration: 900, // ms per full rotation
+    minRotations: 2, // always complete at least two
+    stagger: 120, // ms between slots (flip/spin/wave/pulse)
+    easing: "cubic-bezier(0.65, 0, 0.35, 1)",
+  }}
+/>
+```
+
+<TypeTable
+  type={{
+    variant: {
+      type: '"orbit" | "flip" | "spin" | "wave" | "pulse"',
+      default: '"orbit"',
+    },
+    duration: {
+      type: "number",
+      default: "1100",
+      description: "Milliseconds per full rotation.",
+    },
+    minRotations: {
+      type: "number",
+      default: "1",
+      description: "Rotations that always complete. Clamped to at least 1.",
+    },
+    stagger: {
+      type: "number",
+      default: "90",
+      description: "Delay between neighbouring slots (not orbit).",
+    },
+    easing: {
+      type: "string",
+      default: '"cubic-bezier(0.65, 0, 0.35, 1)"',
+      description: "Easing of each rotation (not orbit, which is linear).",
+    },
+    enterDuration: {
+      type: "number",
+      default: "650",
+      description: "Orbit: row to ring.",
+    },
+    exitDuration: {
+      type: "number",
+      default: "600",
+      description: "Orbit: ring back to row.",
+    },
+    radius: { type: 'number | "auto"', default: '"auto"' },
+    orbitScale: { type: "number", default: "0.82" },
+    direction: { type: "1 | -1", default: "1", description: "1 is clockwise." },
+    reducedMotion: {
+      type: '"user" | "always" | "never"',
+      default: '"user"',
+      description: '"user" swaps to pulse when the OS asks for reduced motion.',
+    },
+  }}
+/>
+
+## Headless
+
+The state machine and the motion are separate from the markup. Build your
+own layout with `useOtpVerify` and keep the same behaviour:
+
+```tsx
+import { useOtpVerify } from "@/lib/otp-verify/use-otp-verify"
+
+const { stageRef, ...otp } = useOtpVerify({ length: 6, onVerify, animation: { variant: "spin" } })
+
+<div ref={stageRef} className="flex items-center justify-center">
+  <OTPField
+    length={6}
+    value={otp.value}
+    onValueChange={otp.setValue}
+    onValueComplete={otp.handleComplete}
+    readOnly={otp.isLocked}
+  >
+    {/* six <OTPFieldSlot /> */}
+  </OTPField>
+</div>
+<p role="status">{otp.status === "error" ? otp.error : null}</p>
+```
+
+`stageRef` must wrap only the slots, in one row and centred vertically. The
+orbit measures from it and grows its padding to fit the ring.
+
+## Accessibility
+
+- Status changes (verifying, verified, the error message) are announced
+  through a `role="status"` region that also describes the field.
+- Slots are read-only rather than disabled while verifying, so focus is not
+  lost.
+- The code is kept after an error (WCAG 3.3.7). Paste and one-time-code
+  autofill are never blocked (WCAG 3.3.8).
+- `prefers-reduced-motion` turns every variant into an opacity pulse and the
+  error shake into a fade.
+
+## API Reference
+
+<TypeTable
+  type={{
+    onVerify: {
+      type: "(code: string) => OtpVerifyResult | Promise<OtpVerifyResult>",
+      description: "Required. See Returning a result.",
+    },
+    length: { type: "number", default: "6" },
+    submitMode: { type: '"auto" | "manual"', default: '"auto"' },
+    showSubmit: {
+      type: "boolean",
+      description: 'Defaults to true in "manual" mode, false in "auto".',
+    },
+    animation: { type: "Partial<OtpLoaderOptions>" },
+    onSuccess: { type: "(code: string) => void" },
+    onError: { type: "(message: string, code: string) => void" },
+    onResend: {
+      type: "() => void | Promise<void>",
+      description: "Omit to hide the resend action.",
+    },
+    resendCooldown: { type: "number", default: "30", description: "Seconds." },
+    clearOnError: { type: "boolean", default: "false" },
+    groupSize: {
+      type: "number",
+      default: "0",
+      description: "Separator every N slots.",
+    },
+    validationType: {
+      type: '"numeric" | "alpha" | "alphanumeric" | "none"',
+      default: '"numeric"',
+    },
+    mask: { type: "boolean", default: "false" },
+    title: { type: "ReactNode", default: '"Check your inbox"' },
+    description: { type: "ReactNode" },
+    icon: { type: "ReactNode | null", description: "null hides the badge." },
+    labels: {
+      type: "Partial<OtpVerifyCardLabels>",
+      description: "Every string in the card, for i18n.",
+    },
+    footer: { type: "ReactNode" },
+    "value / defaultValue / onValueChange": { type: "string" },
+  }}
+/>
