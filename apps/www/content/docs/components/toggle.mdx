@@ -1,0 +1,64 @@
+---
+title: Toggle
+description: A two-state button that can be on or off.
+component: toggle
+links:
+  api: https://base-ui.com/react/components/toggle
+---
+
+<ComponentPreview name="toggle-demo" />
+
+## Installation
+
+```package-install
+npx shadcn@latest add @fujin/toggle
+```
+
+## Usage
+
+```tsx
+import { Toggle } from "@/components/ui/toggle"
+```
+
+```tsx
+<Toggle aria-label="Bold" pressed={bold} onPressedChange={setBold}>
+  <BoldIcon />
+</Toggle>
+```
+
+An icon-only toggle needs an `aria-label` naming the thing being toggled
+("Bold"), not the action ("Make bold"). The pressed state is announced from
+`aria-pressed`, which Base UI sets for you.
+
+## What's different from shadcn/ui
+
+- `render` replaces `asChild`, from Base UI - same as `button`.
+- Hover changes only the text colour. In the default theme `--accent` and
+  `--muted` are the same colour, so shadcn's hover and pressed backgrounds
+  are identical and clicking a hovered toggle shows no change. Here the
+  pressed background is the only background.
+- The unpressed label is `muted-foreground`, so pressing also darkens the
+  foreground rather than relying on a near-white background alone.
+- Solid 2px focus ring instead of `ring-ring/50` (WCAG 1.4.11).
+- Style the pressed state with `data-[pressed]:` (Base UI), not
+  `data-[state=on]:` (Radix).
+
+## API Reference
+
+<TypeTable
+  type={{
+    pressed: { type: "boolean", description: "Controlled pressed state." },
+    defaultPressed: { type: "boolean", default: "false" },
+    onPressedChange: { type: "(pressed: boolean, details) => void" },
+    variant: { type: '"default" | "outline"', default: '"default"' },
+    size: {
+      type: '"sm" | "default" | "lg"',
+      default: '"default"',
+      description: "32px, 36px and 40px square minimums.",
+    },
+  }}
+/>
+
+`toggleVariants` is exported for styling other elements (`toggle-group` uses
+it). Every other prop is forwarded to the Base UI
+[Toggle](https://base-ui.com/react/components/toggle).

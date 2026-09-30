@@ -1,0 +1,89 @@
+---
+title: Progress
+description: How far a task has got - determinate, or indeterminate while the total is unknown.
+component: progress
+links:
+  api: https://base-ui.com/react/components/progress
+---
+
+<ComponentPreview name="progress-demo" />
+
+## Installation
+
+```package-install
+npx shadcn@latest add @fujin/progress
+```
+
+The install also adds a `progress-indeterminate` keyframes rule to your CSS.
+
+## Usage
+
+```tsx
+import {
+  Progress,
+  ProgressLabel,
+  ProgressValue,
+} from "@/components/ui/progress"
+```
+
+```tsx
+<Progress value={uploaded}>
+  <ProgressLabel>Uploading invoices.csv</ProgressLabel>
+  <ProgressValue />
+</Progress>
+```
+
+`Progress` renders the track and bar itself; label and value go inside it
+as children. Pass `value={null}` while the total is unknown - the bar slides
+back and forth (or pulses, with reduced motion) and `ProgressValue` renders
+nothing.
+
+## Accessible name
+
+A progressbar without a name is announced as just "progress bar, 40%". Either
+render a `ProgressLabel` (Base UI wires it up with `aria-labelledby`) or pass
+`aria-label`:
+
+```tsx
+<Progress value={value} aria-label="Uploading invoices.csv" />
+```
+
+`ProgressValue` is `aria-hidden` - the percentage is announced through
+`aria-valuetext`. If you customise what `ProgressValue` shows, pass the same
+text through `getAriaValueText`.
+
+## Progress or meter?
+
+`progress` is for a task moving towards completion (upload, import, setup
+steps). For a measurement in a range that is not "finishing" - storage used,
+quota, strength - use [`meter`](/docs/components/meter).
+
+## What's different from shadcn/ui
+
+- Indeterminate state (`value={null}`) is animated instead of an empty bar.
+- `ProgressLabel` and `ProgressValue` parts, from Base UI.
+- The bar's width transition is turned off under `prefers-reduced-motion`.
+
+## API Reference
+
+<TypeTable
+  type={{
+    "Progress.value": {
+      type: "number | null",
+      required: true,
+      description: "`null` is indeterminate.",
+    },
+    "Progress.min": { type: "number", default: "0" },
+    "Progress.max": { type: "number", default: "100" },
+    "Progress.format": {
+      type: "Intl.NumberFormatOptions",
+      description: "How the value is formatted. Defaults to a percentage.",
+    },
+    "Progress.getAriaValueText": {
+      type: "(formattedValue: string, value: number | null) => string",
+    },
+  }}
+/>
+
+Every other prop is forwarded to the Base UI
+[Progress](https://base-ui.com/react/components/progress).

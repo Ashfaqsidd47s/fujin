@@ -1,0 +1,135 @@
+---
+title: Dialog
+description: A modal window for a short, focused task - with focus trapping, focus return and a labelled close button.
+component: dialog
+links:
+  api: https://base-ui.com/react/components/dialog
+---
+
+<ComponentPreview name="dialog-demo" />
+
+## Installation
+
+```package-install
+npx shadcn@latest add @fujin/dialog
+```
+
+## Usage
+
+```tsx
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+```
+
+```tsx
+<Dialog>
+  <DialogTrigger render={<Button variant="outline">Edit profile</Button>} />
+  <DialogContent>
+    <DialogHeader>
+      <DialogTitle>Edit profile</DialogTitle>
+      <DialogDescription>Update your name and username.</DialogDescription>
+    </DialogHeader>
+    {/* fields */}
+    <DialogFooter>
+      <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
+      <Button type="submit">Save changes</Button>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>
+```
+
+## Forms: keep what the user typed
+
+Base UI unmounts the popup when the dialog closes, so uncontrolled inputs are
+reset every time it reopens. If closing by accident (Esc, a stray click on the
+backdrop) should not cost the user their input, keep the draft in state
+outside the dialog, as the demo does:
+
+```tsx
+const [open, setOpen] = React.useState(false)
+const [draft, setDraft] = React.useState(profile)
+
+<Dialog open={open} onOpenChange={setOpen}>
+  <DialogContent>
+    <form
+      onSubmit={(event) => {
+        event.preventDefault()
+        save(draft)
+        setOpen(false)
+      }}
+    >
+      <Input
+        value={draft.name}
+        onValueChange={(name) => setDraft({ ...draft, name })}
+      />
+    </form>
+  </DialogContent>
+</Dialog>
+```
+
+## Opening from a menu
+
+Control the dialog and open it from the menu item's `onClick`. Nesting the
+`Dialog` inside `DropdownMenuContent` unmounts it as soon as the menu closes.
+
+```tsx
+const [open, setOpen] = React.useState(false)
+
+<DropdownMenuItem onClick={() => setOpen(true)}>Rename...</DropdownMenuItem>
+<Dialog open={open} onOpenChange={setOpen}>...</Dialog>
+```
+
+## What's different from shadcn/ui
+
+- `render` replaces `asChild`, from Base UI.
+- The close button is a 32px `Button` (shadcn's is a 16px icon), so it clears
+  the WCAG 2.5.8 24px minimum target size, and it has a solid focus ring.
+- The popup is capped at the viewport height and scrolls internally, so a long
+  form never pushes the footer off-screen.
+
+## API Reference
+
+<TypeTable
+  type={{
+    "Dialog.open": { type: "boolean", description: "Controlled open state." },
+    "Dialog.onOpenChange": {
+      type: "(open: boolean, details) => void",
+      description:
+        '`details.reason` is e.g. `"escape-key"` or `"outside-press"`; call `details.cancel()` to keep it open.',
+    },
+    "Dialog.modal": {
+      type: 'boolean | "trap-focus"',
+      default: "true",
+    },
+    "Dialog.disablePointerDismissal": {
+      type: "boolean",
+      default: "false",
+      description: "Ignore clicks on the backdrop.",
+    },
+    "DialogContent.showCloseButton": {
+      type: "boolean",
+      default: "true",
+      description:
+        'Renders a close button labelled "Close" in the top-right corner.',
+    },
+    "DialogContent.initialFocus": {
+      type: "boolean | RefObject | (type) => HTMLElement | boolean",
+      description: "Defaults to the first tabbable element in the popup.",
+    },
+    "DialogContent.finalFocus": {
+      type: "boolean | RefObject | (type) => HTMLElement | boolean",
+      description: "Defaults to the trigger.",
+    },
+  }}
+/>
+
+Every other prop is forwarded to the Base UI
+[Dialog](https://base-ui.com/react/components/dialog).

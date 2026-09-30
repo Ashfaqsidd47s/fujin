@@ -1,0 +1,93 @@
+---
+title: Avatar
+description: A user's picture, with initials as a fallback, and an overlapping group.
+component: avatar
+links:
+  api: https://base-ui.com/react/components/avatar
+---
+
+<ComponentPreview name="avatar-demo" />
+
+## Installation
+
+```package-install
+npx shadcn@latest add @fujin/avatar
+```
+
+## Usage
+
+```tsx
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarGroup,
+  AvatarGroupCount,
+  AvatarImage,
+} from "@/components/ui/avatar"
+```
+
+```tsx
+<Avatar size="lg">
+  <AvatarImage src={user.imageUrl} alt={user.name} />
+  <AvatarFallback delay={300}>{initials}</AvatarFallback>
+</Avatar>
+```
+
+`AvatarFallback` shows while the image loads and if it fails. `delay` (ms)
+holds it back so a fast image does not flash initials first.
+
+## Group
+
+```tsx
+<AvatarGroup role="group" aria-label="Assigned to 6 people">
+  <Avatar>...</Avatar>
+  <Avatar>...</Avatar>
+  <AvatarGroupCount>
+    <span aria-hidden>+4</span>
+    <span className="sr-only">and 4 more</span>
+  </AvatarGroupCount>
+</AvatarGroup>
+```
+
+Give every avatar in a group the same `size`; the count bubble follows it.
+`AvatarGroupCount` is a plain `span`, where `aria-label` is ignored, so pair
+a hidden "+4" with screen-reader text as above.
+
+## Accessible text
+
+Base UI hides the image from assistive tech until it has loaded, so what
+gets read is whichever part is on screen:
+
+- **Next to the person's name** (a comment author, a table row): the avatar
+  is decorative. Use `alt=""` and add `aria-hidden` to the fallback.
+- **On its own** (an account button, a group): `alt` is the name, and the
+  fallback should say the same - `<span aria-hidden>LT</span><span className="sr-only">Lena Torres</span>` -
+  or screen readers read the initials letter by letter.
+
+## What's different from shadcn/ui
+
+`size` is a prop (`sm` 24px, `default` 32px, `lg` 40px) instead of a
+className, so the fallback text and `AvatarGroupCount` scale with it.
+`AvatarGroup` and `AvatarGroupCount` are built in.
+
+## API Reference
+
+<TypeTable
+  type={{
+    "Avatar.size": {
+      type: '"sm" | "default" | "lg"',
+      default: '"default"',
+    },
+    "AvatarFallback.delay": {
+      type: "number",
+      default: "0",
+      description: "Milliseconds to wait before showing the fallback.",
+    },
+    "AvatarImage.onLoadingStatusChange": {
+      type: '(status: "idle" | "loading" | "loaded" | "error") => void',
+    },
+  }}
+/>
+
+Every other prop is forwarded to the Base UI
+[Avatar](https://base-ui.com/react/components/avatar).

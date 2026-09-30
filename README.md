@@ -51,34 +51,46 @@ pnpm release:dry            # preview an npm release
 Point the CLI or MCP server at a local registry with
 `FUJIN_REGISTRY_URL=http://localhost:4100/r`.
 
-### Trying it in another project before publishing
+### Using it in another project
 
-The registry is not hosted and the packages are not on npm yet, so use the
-local build:
+The registry is live at <https://package.hellofizzbuzz.in/r> and the CLI is on
+npm as `fujin`:
 
 ```bash
-# 1. In this repo: build and serve the registry
+npx fujin@latest init                  # registers @fujin, adds theme tokens
+npx fujin@latest add data-table
+
+# or the shadcn CLI, with no setup
+npx shadcn@latest add https://package.hellofizzbuzz.in/r/data-table.json
+```
+
+`@fujin/mcp` is not on npm yet, so `fujin mcp init` writes a config that
+cannot start. Until it is published, point your editor at the local build:
+`"command": "node", "args": ["/path/to/fujin/packages/mcp/dist/bin.mjs"]`.
+
+### Trying unreleased changes
+
+Serve your local build and point the CLI at it:
+
+```bash
+# 1. In this repo
 pnpm install && pnpm build
 pnpm --filter www start                     # http://localhost:4100
 
 # 2. Anywhere else (macOS/Linux shell shown)
 export FUJIN_REGISTRY_URL=http://localhost:4100/r
 FUJIN=/path/to/fujin/packages/cli/dist/index.mjs
-
-# New app from the GitHub template
 node $FUJIN create my-app --template next    # or --template react
-
-# Or an existing Next.js / Vite app with Tailwind v4
 node $FUJIN init --yes
 node $FUJIN add button field input
-node $FUJIN mcp init                        # needs @fujin/mcp published, see below
 ```
 
 On Windows PowerShell use `$env:FUJIN_REGISTRY_URL = "http://localhost:4100/r"`.
 
-For the MCP server before it is published, point your editor at the local
-build: `"command": "node", "args": ["/path/to/fujin/packages/mcp/dist/bin.mjs"]`
-with the same `FUJIN_REGISTRY_URL` in `env`.
+Items name their Fujin dependencies by absolute URL, taken from
+`FUJIN_REGISTRY_URL` at build time (default: the public site). To install by
+URL from a local server, build with it set so dependencies come from there
+too: `FUJIN_REGISTRY_URL=http://localhost:4100/r pnpm build`.
 
 To go live, follow [docs/releasing.md](docs/releasing.md): deploy `apps/www`
 (Vercel or Docker), then publish the npm packages.

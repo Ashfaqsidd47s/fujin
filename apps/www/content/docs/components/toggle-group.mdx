@@ -1,0 +1,82 @@
+---
+title: Toggle Group
+description: A set of toggles with shared single or multiple selection.
+component: toggle-group
+links:
+  api: https://base-ui.com/react/components/toggle-group
+---
+
+<ComponentPreview name="toggle-group-demo" />
+
+## Installation
+
+```package-install
+npx shadcn@latest add @fujin/toggle-group
+```
+
+## Usage
+
+```tsx
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+```
+
+```tsx
+<ToggleGroup
+  aria-label="Text alignment"
+  defaultValue={["left"]}
+  variant="outline"
+>
+  <ToggleGroupItem value="left" aria-label="Align left">
+    <AlignLeftIcon />
+  </ToggleGroupItem>
+  <ToggleGroupItem value="center" aria-label="Align center">
+    <AlignCenterIcon />
+  </ToggleGroupItem>
+</ToggleGroup>
+```
+
+## What's different from shadcn/ui
+
+- **The value is always an array.** Base UI has no `type="single" | "multiple"`
+  prop: single selection is the default and still uses `value={["left"]}`;
+  pass `multiple` to allow several pressed items. `onValueChange` receives
+  `string[]` either way.
+- In single mode, clicking the pressed item unpresses it (the value becomes
+  `[]`). To require a selection, ignore empty changes in `onValueChange` - see
+  the demo.
+- `variant` and `size` on the group flow to every item via context, but an
+  item's own `variant`/`size` wins.
+- `spacing={0}` (the default) joins items into one segmented control; any
+  other number is a gap in Tailwind spacing units.
+- `orientation="vertical"` stacks the items and switches arrow-key
+  navigation to Up/Down.
+
+## API Reference
+
+<TypeTable
+  type={{
+    value: { type: "string[]", description: "Controlled pressed values." },
+    defaultValue: { type: "string[]" },
+    onValueChange: { type: "(value: string[], details) => void" },
+    multiple: {
+      type: "boolean",
+      default: "false",
+      description: "Allow more than one pressed item.",
+    },
+    variant: { type: '"default" | "outline"', default: '"default"' },
+    size: { type: '"sm" | "default" | "lg"', default: '"default"' },
+    spacing: {
+      type: "number",
+      default: "0",
+      description: "Gap between items; 0 joins them.",
+    },
+    orientation: {
+      type: '"horizontal" | "vertical"',
+      default: '"horizontal"',
+    },
+  }}
+/>
+
+Every other prop is forwarded to the Base UI
+[ToggleGroup](https://base-ui.com/react/components/toggle-group); items
+forward to [Toggle](https://base-ui.com/react/components/toggle).

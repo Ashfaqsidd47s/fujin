@@ -1,0 +1,82 @@
+---
+title: Sheet
+description: A dialog that slides in from an edge of the screen, for secondary forms and details.
+component: sheet
+links:
+  api: https://base-ui.com/react/components/dialog
+---
+
+<ComponentPreview name="sheet-demo" />
+
+## Installation
+
+```package-install
+npx shadcn@latest add @fujin/sheet
+```
+
+## Usage
+
+```tsx
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet"
+```
+
+```tsx
+<Sheet>
+  <SheetTrigger render={<Button variant="outline">Open</Button>} />
+  <SheetContent side="right">
+    <SheetHeader>
+      <SheetTitle>Shipping address</SheetTitle>
+      <SheetDescription>Used for this order only.</SheetDescription>
+    </SheetHeader>
+    ...
+  </SheetContent>
+</Sheet>
+```
+
+## Side
+
+<ComponentPreview name="sheet-side-demo" />
+
+`side` is `"top"`, `"right"` (default), `"bottom"` or `"left"`. Left and right
+sheets are 3/4 of the screen wide, up to `max-w-sm`; override with
+`className="sm:max-w-lg"`.
+
+## Sheet or drawer?
+
+Sheet is a Base UI `Dialog` positioned against an edge. It has no swipe or
+drag gestures. For a mobile bottom sheet that the user can swipe away or snap
+to heights, a `drawer` component built on Base UI's Drawer is planned.
+
+## What's different from shadcn/ui
+
+- Built on Base UI's Dialog; `render` replaces `asChild`.
+- The close button is a 32px `Button` with a solid focus ring (WCAG 2.5.8,
+  1.4.11).
+- Transitions are skipped under `prefers-reduced-motion`.
+
+## API Reference
+
+<TypeTable
+  type={{
+    "SheetContent.side": {
+      type: '"top" | "right" | "bottom" | "left"',
+      default: '"right"',
+    },
+    "SheetContent.showCloseButton": {
+      type: "boolean",
+      default: "true",
+    },
+    "Sheet.open": { type: "boolean" },
+    "Sheet.onOpenChange": { type: "(open: boolean, details) => void" },
+  }}
+/>
+
+Every other prop is forwarded to the Base UI
+[Dialog](https://base-ui.com/react/components/dialog).

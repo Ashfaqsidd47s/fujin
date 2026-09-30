@@ -1,0 +1,166 @@
+---
+title: Combobox
+description: A form field that filters a list of options as you type.
+component: combobox
+links:
+  api: https://base-ui.com/react/components/combobox
+---
+
+<ComponentPreview name="combobox-demo" align="start" />
+
+## Installation
+
+```package-install
+npx shadcn@latest add @fujin/combobox
+```
+
+## Usage
+
+```tsx
+import {
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
+} from "@/components/ui/combobox"
+```
+
+```tsx
+<Field name="framework">
+  <FieldLabel>Framework</FieldLabel>
+  <Combobox items={frameworks} value={value} onValueChange={setValue}>
+    <ComboboxInput placeholder="Search frameworks..." showClear />
+    <ComboboxContent>
+      <ComboboxEmpty>No framework found.</ComboboxEmpty>
+      <ComboboxList>
+        {(framework) => (
+          <ComboboxItem key={framework.value} value={framework}>
+            {framework.label}
+          </ComboboxItem>
+        )}
+      </ComboboxList>
+    </ComboboxContent>
+  </Combobox>
+</Field>
+```
+
+Filtering runs against the `items` prop, not the rendered text:
+`ComboboxList`'s child function is called for each match. Items shaped
+`{ value, label }` need no configuration - the input shows `label` and the
+form submits `value`. For other shapes, pass `itemToStringLabel` and
+`itemToStringValue`.
+
+## Select, combobox or command?
+
+- **`select`** - a short list (roughly under 15) where scanning is faster than
+  typing. No text input.
+- **`combobox`** - a longer list, in a form, where typing to narrow it helps.
+  The value must be one of the options.
+- **`command`** - a search-to-pick list embedded in other UI (data-table's
+  filter bar, a command palette), not a labelled form field.
+- Free text with suggestions (the typed text _is_ the value) - use Base UI's
+  Autocomplete; a combobox discards text that doesn't match an option.
+
+## What happens to typed text
+
+Typed text is only a filter. In single mode, when the popup closes the input
+reverts to the selected item's label, or empties if nothing is selected. In
+`multiple` mode the filter text clears after each pick and on close.
+
+## Multiple selection with chips
+
+<ComponentPreview name="combobox-multiple-demo" align="start" />
+
+```tsx
+<Combobox items={labels} multiple defaultValue={[labels[0]]}>
+  <ComboboxChips aria-label="Selected labels">
+    <ComboboxValue>
+      {(selected) => (
+        <>
+          {selected.map((item) => (
+            <ComboboxChip key={item.value}>{item.label}</ComboboxChip>
+          ))}
+          <ComboboxChipsInput
+            placeholder={selected.length ? "" : "Add labels..."}
+          />
+        </>
+      )}
+    </ComboboxValue>
+  </ComboboxChips>
+  <ComboboxContent>
+    <ComboboxList>
+      {(item) => (
+        <ComboboxItem key={item.value} value={item}>
+          {item.label}
+        </ComboboxItem>
+      )}
+    </ComboboxList>
+  </ComboboxContent>
+</Combobox>
+```
+
+From the start of the input, Left Arrow moves focus into the chips;
+Backspace or Delete removes the focused chip. The remove button is a 24px
+pointer target and is not in the tab order.
+
+## Groups
+
+Pass groups as `{ value, items }[]` and render each with a
+`ComboboxCollection`:
+
+```tsx
+<ComboboxList>
+  {(group) => (
+    <ComboboxGroup key={group.value} items={group.items}>
+      <ComboboxGroupLabel>{group.value}</ComboboxGroupLabel>
+      <ComboboxCollection>
+        {(item) => (
+          <ComboboxItem key={item.value} value={item}>
+            {item.label}
+          </ComboboxItem>
+        )}
+      </ComboboxCollection>
+    </ComboboxGroup>
+  )}
+</ComboboxList>
+```
+
+## What's different from shadcn/ui
+
+shadcn/ui builds a combobox by composing `Popover` and `Command` (cmdk). This
+one is Base UI's `Combobox`: one component with a real input as the form
+control, a hidden input for form submission, `Field` integration, and
+filtering driven by `items`.
+
+## API Reference
+
+<TypeTable
+  type={{
+    items: {
+      type: "Item[] | { value, items }[]",
+      description:
+        "The full, unfiltered list. Required for filtering and ComboboxEmpty.",
+    },
+    value: { type: "Value | Value[] | null" },
+    defaultValue: { type: "Value | Value[] | null" },
+    onValueChange: { type: "(value, details) => void" },
+    multiple: { type: "boolean", default: "false" },
+    autoHighlight: {
+      type: "boolean",
+      default: "false",
+      description: "Highlight the first match while typing, so Enter picks it.",
+    },
+    "ComboboxInput.showTrigger": { type: "boolean", default: "true" },
+    "ComboboxInput.showClear": { type: "boolean", default: "false" },
+    "ComboboxChip.showRemove": { type: "boolean", default: "true" },
+    "ComboboxContent.side": {
+      type: '"top" | "right" | "bottom" | "left"',
+      default: '"bottom"',
+    },
+  }}
+/>
+
+Every other prop is forwarded to the Base UI
+[Combobox](https://base-ui.com/react/components/combobox).

@@ -1,0 +1,86 @@
+---
+title: Native Select
+description: A styled native select with a chevron. Uses the OS picker and works inside Field.
+component: native-select
+links:
+  api: https://base-ui.com/react/components/field
+---
+
+<ComponentPreview name="native-select-demo" align="start" />
+
+## Installation
+
+```package-install
+npx shadcn@latest add @fujin/native-select
+```
+
+## Usage
+
+```tsx
+import {
+  NativeSelect,
+  NativeSelectOptGroup,
+  NativeSelectOption,
+} from "@/components/ui/native-select"
+```
+
+```tsx
+<Field name="sort">
+  <FieldLabel>Sort by</FieldLabel>
+  <NativeSelect defaultValue="newest">
+    <NativeSelectOption value="newest">Newest</NativeSelectOption>
+    <NativeSelectOption value="oldest">Oldest</NativeSelectOption>
+  </NativeSelect>
+</Field>
+```
+
+## Placeholder
+
+`placeholder` does nothing on a `<select>`. Use a first option with an empty
+value, disabled so it cannot be re-picked, and make the field `required`:
+
+```tsx
+<NativeSelect required defaultValue="">
+  <NativeSelectOption value="" disabled>
+    Select a country
+  </NativeSelectOption>
+  ...
+</NativeSelect>
+```
+
+## When to use Select instead
+
+Native select uses the platform picker, which is the most usable option on
+touch devices and needs no JavaScript to submit. Reach for `select` when
+options need icons or descriptions, and `combobox` when the list needs search.
+
+## What's different from shadcn/ui
+
+- `className` goes on the wrapper, which is full width by default. The
+  `<select>` always fills it, so `className="w-48"` sizes the whole control.
+- It renders through Base UI's `Field.Control`, so inside `<Field>` the label,
+  description, error and `aria-invalid` are wired up automatically.
+
+## API Reference
+
+<TypeTable
+  type={{
+    size: {
+      type: '"default" | "sm"',
+      default: '"default"',
+      description: "36px or 32px tall.",
+    },
+    className: {
+      type: "string",
+      description: "Applied to the wrapper. Size the control here.",
+    },
+    onValueChange: {
+      type: "(value: string, details) => void",
+      description: "Called with the selected value. `onChange` also works.",
+    },
+  }}
+/>
+
+Every other `<select>` attribute is forwarded (except the native `size`).
+Field wiring comes from Base UI's
+[Field.Control](https://base-ui.com/react/components/field).

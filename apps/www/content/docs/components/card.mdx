@@ -1,0 +1,71 @@
+---
+title: Card
+description: A bordered surface that groups a header, content and footer.
+component: card
+---
+
+<ComponentPreview name="card-demo" />
+
+## Installation
+
+```package-install
+npx shadcn@latest add @fujin/card
+```
+
+## Usage
+
+```tsx
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+```
+
+```tsx
+<Card>
+  <CardHeader>
+    <CardTitle>Revenue</CardTitle>
+    <CardDescription>Last 30 days</CardDescription>
+    <CardAction>...</CardAction>
+  </CardHeader>
+  <CardContent>...</CardContent>
+  <CardFooter>...</CardFooter>
+</Card>
+```
+
+The header is a container (`@container/card-header`), so its contents can use
+container queries - `@md/card-header:flex-row` - to adapt to the card's width
+instead of the viewport. It grows a second column only when a `CardAction` is
+present. Add `border-b` to `CardHeader` or `border-t` to `CardFooter` and the
+padding adjusts.
+
+## Headings
+
+`CardTitle` is a `div`, because only you know the right heading level. If the
+card is a section of the page, give it one:
+
+```tsx
+<CardTitle role="heading" aria-level={3}>
+  Revenue
+</CardTitle>
+```
+
+## What's different from shadcn/ui
+
+Same parts and layout. `size="sm"` tightens padding for dense dashboards.
+No `"use client"` - it works in Server Components.
+
+## API Reference
+
+<TypeTable
+  type={{
+    "Card.size": { type: '"default" | "sm"', default: '"default"' },
+  }}
+/>
+
+Every part renders a `div` and forwards all props.

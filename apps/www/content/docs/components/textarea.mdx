@@ -1,0 +1,72 @@
+---
+title: Textarea
+description: A multi-line text input that grows with its content and wires itself into the surrounding Field.
+component: textarea
+links:
+  api: https://base-ui.com/react/components/field
+---
+
+<ComponentPreview name="textarea-demo" align="start" />
+
+## Installation
+
+```package-install
+npx shadcn@latest add @fujin/textarea
+```
+
+## Usage
+
+```tsx
+import { Field, FieldLabel } from "@/components/ui/field"
+import { Textarea } from "@/components/ui/textarea"
+```
+
+```tsx
+<Field name="bio">
+  <FieldLabel>Bio</FieldLabel>
+  <Textarea placeholder="A sentence or two about you" />
+</Field>
+```
+
+## Auto-grow
+
+The textarea grows with its content (`field-sizing: content`) from a 64px
+minimum. Cap it with a `max-h-*` class, after which it scrolls; or pass
+`field-sizing-fixed` to size it with `rows` instead. Browsers without
+`field-sizing` support fall back to `rows`.
+
+## Character count
+
+There is no built-in counter. Keep the value in state and show the count in
+`FieldDescription`, so it is announced with the field but not on every
+keystroke:
+
+```tsx
+const [bio, setBio] = React.useState("")
+
+<Field name="bio">
+  <FieldLabel>Bio</FieldLabel>
+  <Textarea value={bio} onValueChange={setBio} maxLength={160} />
+  <FieldDescription>{bio.length}/160</FieldDescription>
+</Field>
+```
+
+## What's different from shadcn/ui
+
+It renders through Base UI's `Field.Control`, so inside `<Field>` the label,
+description, error and `aria-invalid` are wired up automatically - the same as
+`Input`. The focus ring is solid.
+
+## API Reference
+
+<TypeTable
+  type={{
+    onValueChange: {
+      type: "(value: string, details) => void",
+      description: "Called with the string value. `onChange` also works.",
+    },
+  }}
+/>
+
+Every other `<textarea>` attribute is forwarded. Field wiring comes from Base
+UI's [Field.Control](https://base-ui.com/react/components/field).

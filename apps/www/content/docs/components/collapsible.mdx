@@ -1,0 +1,69 @@
+---
+title: Collapsible
+description: Show and hide one section of content with a trigger.
+component: collapsible
+links:
+  api: https://base-ui.com/react/components/collapsible
+---
+
+<ComponentPreview name="collapsible-demo" />
+
+## Installation
+
+```package-install
+npx shadcn@latest add @fujin/collapsible
+```
+
+## Usage
+
+```tsx
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible"
+```
+
+```tsx
+<Collapsible>
+  <CollapsibleTrigger
+    render={<Button variant="ghost">Advanced options</Button>}
+  />
+  <CollapsibleContent>...</CollapsibleContent>
+</Collapsible>
+```
+
+The trigger is unstyled - render a `Button` (or any control) through `render`.
+It gets `aria-expanded` and `aria-controls` from Base UI, so an icon-only
+trigger only needs an `aria-label` that names the section, not its state.
+
+## What's different from shadcn/ui
+
+- `CollapsibleContent` animates its height with Base UI's
+  `--collapsible-panel-height` variable (shadcn's collapsible is unstyled).
+  The animation is skipped under `prefers-reduced-motion`.
+- `render` replaces `asChild`.
+
+## API Reference
+
+<TypeTable
+  type={{
+    "Collapsible.open": { type: "boolean" },
+    "Collapsible.defaultOpen": { type: "boolean", default: "false" },
+    "Collapsible.onOpenChange": { type: "(open: boolean, details) => void" },
+    "Collapsible.disabled": { type: "boolean", default: "false" },
+    "CollapsibleContent.keepMounted": {
+      type: "boolean",
+      default: "false",
+      description: "Keep the content in the DOM while closed.",
+    },
+    "CollapsibleContent.hiddenUntilFound": {
+      type: "boolean",
+      default: "false",
+      description: "Let find-in-page search and open the content.",
+    },
+  }}
+/>
+
+Every other prop is forwarded to the Base UI
+[Collapsible](https://base-ui.com/react/components/collapsible).

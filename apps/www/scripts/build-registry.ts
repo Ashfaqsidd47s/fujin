@@ -4,7 +4,8 @@
  * Pipeline:
  *   1. Load and validate the registry definition (`registry/registry.ts`).
  *   2. Emit `registry.json` for the shadcn CLI.
- *   3. Run `shadcn build` -> `public/r/{name}.json` + `public/r/registry.json`.
+ *   3. Run `shadcn build` -> `public/r/{name}.json` + `public/r/registry.json`,
+ *      then point each item's `@fujin/<name>` dependencies at absolute URLs.
  *   4. Emit the MCP artifacts: a compact catalog plus one doc per item.
  *   5. Emit `registry/__index__.ts` so the docs site can render live previews.
  *
@@ -16,11 +17,15 @@
  */
 import { execFileSync } from "node:child_process"
 import { existsSync } from "node:fs"
-import { mkdir, readdir, rm, writeFile } from "node:fs/promises"
+import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 
-import { registrySchema, type RegistryItem } from "@fujin/schema"
+import {
+  REGISTRY_NAMESPACE,
+  registrySchema,
+  type RegistryItem,
+} from "@fujin/schema"
 
 import { registry } from "../registry/registry"
 
@@ -31,6 +36,17 @@ const APP_ROOT = path.resolve(
 const OUTPUT_DIR = path.join(APP_ROOT, "public", "r")
 const MCP_DIR = path.join(OUTPUT_DIR, "mcp")
 const REGISTRY_JSON = path.join(APP_ROOT, "registry.json")
+
+/**
+ * Where this build will be served. `FUJIN_REGISTRY_URL` (an http URL) wins,
+ * so a local build can point at `http://localhost:4100/r`; otherwise the
+ * deployment's site URL.
+ */
+const SERVED_URL = (
+  process.env.FUJIN_REGISTRY_URL?.startsWith("http")
+    ? process.env.FUJIN_REGISTRY_URL
+    : `${registry.homepage}/r`
+).replace(/\/+$/, "")
 
 /** Types that exist only to serve the docs site and are never published. */
 const INTERNAL_TYPES = new Set(["registry:example", "registry:internal"])
@@ -96,6 +112,34 @@ function runShadcnBuild() {
     ],
     { cwd: APP_ROOT, stdio: "inherit" }
   )
+}
+
+/**
+ * `@fujin/button` resolves only in projects that list `@fujin` under
+ * `registries` in components.json. As absolute URLs the dependencies also
+ * resolve for `shadcn add <url>` with no setup. The source and the MCP docs
+ * keep the short names.
+ */
+async function absolutizeDependencies(items: RegistryItem[]) {
+  const prefix = `${REGISTRY_NAMESPACE}/`
+  let rewritten = 0
+  for (const item of items) {
+    const file = path.join(OUTPUT_DIR, `${item.name}.json`)
+    const built = JSON.parse(await readFile(file, "utf8")) as {
+      registryDependencies?: string[]
+    }
+    if (!built.registryDependencies?.some((dep) => dep.startsWith(prefix))) {
+      continue
+    }
+    built.registryDependencies = built.registryDependencies.map((dep) =>
+      dep.startsWith(prefix)
+        ? `${SERVED_URL}/${dep.slice(prefix.length)}.json`
+        : dep
+    )
+    await writeFile(file, `${JSON.stringify(built, null, 2)}\n`, "utf8")
+    rewritten++
+  }
+  log("dependency urls", `${rewritten} items -> ${SERVED_URL}`)
 }
 
 /**
@@ -239,6 +283,7 @@ async function main() {
 
   const publicItems = await buildRegistryJson()
   runShadcnBuild()
+  await absolutizeDependencies(publicItems)
 
   const allItems = registry.items as RegistryItem[]
   await buildMcpArtifacts(publicItems)

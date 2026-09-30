@@ -53,4 +53,148 @@ export const Index: Record<
     name: "data-table-demo",
     component: React.lazy(() => import("@/registry/fujin/examples/data-table-demo")),
   },
+  "alert-demo": {
+    name: "alert-demo",
+    component: React.lazy(() => import("@/registry/fujin/examples/alert-demo")),
+  },
+  "alert-live-demo": {
+    name: "alert-live-demo",
+    component: React.lazy(() => import("@/registry/fujin/examples/alert-live-demo")),
+  },
+  "card-demo": {
+    name: "card-demo",
+    component: React.lazy(() => import("@/registry/fujin/examples/card-demo")),
+  },
+  "avatar-demo": {
+    name: "avatar-demo",
+    component: React.lazy(() => import("@/registry/fujin/examples/avatar-demo")),
+  },
+  "kbd-demo": {
+    name: "kbd-demo",
+    component: React.lazy(() => import("@/registry/fujin/examples/kbd-demo")),
+  },
+  "progress-demo": {
+    name: "progress-demo",
+    component: React.lazy(() => import("@/registry/fujin/examples/progress-demo")),
+  },
+  "empty-demo": {
+    name: "empty-demo",
+    component: React.lazy(() => import("@/registry/fujin/examples/empty-demo")),
+  },
+  "meter-demo": {
+    name: "meter-demo",
+    component: React.lazy(() => import("@/registry/fujin/examples/meter-demo")),
+  },
+  "label-demo": {
+    name: "label-demo",
+    component: React.lazy(() => import("@/registry/fujin/examples/label-demo")),
+  },
+  "textarea-demo": {
+    name: "textarea-demo",
+    component: React.lazy(() => import("@/registry/fujin/examples/textarea-demo")),
+  },
+  "native-select-demo": {
+    name: "native-select-demo",
+    component: React.lazy(() => import("@/registry/fujin/examples/native-select-demo")),
+  },
+  "number-field-demo": {
+    name: "number-field-demo",
+    component: React.lazy(() => import("@/registry/fujin/examples/number-field-demo")),
+  },
+  "otp-field-demo": {
+    name: "otp-field-demo",
+    component: React.lazy(() => import("@/registry/fujin/examples/otp-field-demo")),
+  },
+  "switch-demo": {
+    name: "switch-demo",
+    component: React.lazy(() => import("@/registry/fujin/examples/switch-demo")),
+  },
+  "breadcrumb-demo": {
+    name: "breadcrumb-demo",
+    component: React.lazy(() => import("@/registry/fujin/examples/breadcrumb-demo")),
+  },
+  "pagination-demo": {
+    name: "pagination-demo",
+    component: React.lazy(() => import("@/registry/fujin/examples/pagination-demo")),
+  },
+  "pagination-parts-demo": {
+    name: "pagination-parts-demo",
+    component: React.lazy(() => import("@/registry/fujin/examples/pagination-parts-demo")),
+  },
+  "scroll-area-demo": {
+    name: "scroll-area-demo",
+    component: React.lazy(() => import("@/registry/fujin/examples/scroll-area-demo")),
+  },
+  "scroll-area-horizontal-demo": {
+    name: "scroll-area-horizontal-demo",
+    component: React.lazy(() => import("@/registry/fujin/examples/scroll-area-horizontal-demo")),
+  },
+  "radio-group-demo": {
+    name: "radio-group-demo",
+    component: React.lazy(() => import("@/registry/fujin/examples/radio-group-demo")),
+  },
+  "select-demo": {
+    name: "select-demo",
+    component: React.lazy(() => import("@/registry/fujin/examples/select-demo")),
+  },
+  "select-multiple-demo": {
+    name: "select-multiple-demo",
+    component: React.lazy(() => import("@/registry/fujin/examples/select-multiple-demo")),
+  },
+  "combobox-demo": {
+    name: "combobox-demo",
+    component: React.lazy(() => import("@/registry/fujin/examples/combobox-demo")),
+  },
+  "combobox-multiple-demo": {
+    name: "combobox-multiple-demo",
+    component: React.lazy(() => import("@/registry/fujin/examples/combobox-multiple-demo")),
+  },
+  "slider-demo": {
+    name: "slider-demo",
+    component: React.lazy(() => import("@/registry/fujin/examples/slider-demo")),
+  },
+  "toggle-demo": {
+    name: "toggle-demo",
+    component: React.lazy(() => import("@/registry/fujin/examples/toggle-demo")),
+  },
+  "toggle-group-demo": {
+    name: "toggle-group-demo",
+    component: React.lazy(() => import("@/registry/fujin/examples/toggle-group-demo")),
+  },
+  "dialog-demo": {
+    name: "dialog-demo",
+    component: React.lazy(() => import("@/registry/fujin/examples/dialog-demo")),
+  },
+  "alert-dialog-demo": {
+    name: "alert-dialog-demo",
+    component: React.lazy(() => import("@/registry/fujin/examples/alert-dialog-demo")),
+  },
+  "sheet-demo": {
+    name: "sheet-demo",
+    component: React.lazy(() => import("@/registry/fujin/examples/sheet-demo")),
+  },
+  "sheet-side-demo": {
+    name: "sheet-side-demo",
+    component: React.lazy(() => import("@/registry/fujin/examples/sheet-side-demo")),
+  },
+  "tabs-demo": {
+    name: "tabs-demo",
+    component: React.lazy(() => import("@/registry/fujin/examples/tabs-demo")),
+  },
+  "tabs-line-demo": {
+    name: "tabs-line-demo",
+    component: React.lazy(() => import("@/registry/fujin/examples/tabs-line-demo")),
+  },
+  "accordion-demo": {
+    name: "accordion-demo",
+    component: React.lazy(() => import("@/registry/fujin/examples/accordion-demo")),
+  },
+  "collapsible-demo": {
+    name: "collapsible-demo",
+    component: React.lazy(() => import("@/registry/fujin/examples/collapsible-demo")),
+  },
+  "toast-demo": {
+    name: "toast-demo",
+    component: React.lazy(() => import("@/registry/fujin/examples/toast-demo")),
+  },
 }

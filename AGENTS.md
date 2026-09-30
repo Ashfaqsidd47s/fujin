@@ -26,7 +26,8 @@ making structural changes; it records the decisions and why they were made.
   `components/` (no business logic).
 - Accessibility bar is WCAG 2.2 AA: 24px minimum targets, solid focus rings,
   no drag-only interactions, keep entered values, never block paste.
-- Cross-item dependencies use `@fujin/<name>` in `registryDependencies`.
+- Cross-item dependencies use `@fujin/<name>` in `registryDependencies`;
+  the registry build rewrites them to absolute URLs in `public/r`.
 - Every public item needs a complete `meta.fujin` (see
   `packages/schema/src/mcp.ts`). `whenNotToUse` and `pitfalls` matter most.
 

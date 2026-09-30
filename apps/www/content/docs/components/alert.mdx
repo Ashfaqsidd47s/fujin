@@ -1,0 +1,94 @@
+---
+title: Alert
+description: A callout for a message the user should notice - info, success, warning or error.
+component: alert
+---
+
+<ComponentPreview name="alert-demo" />
+
+## Installation
+
+```package-install
+npx shadcn@latest add @fujin/alert
+```
+
+## Usage
+
+```tsx
+import {
+  Alert,
+  AlertAction,
+  AlertDescription,
+  AlertTitle,
+} from "@/components/ui/alert"
+```
+
+```tsx
+<Alert variant="destructive">
+  <CircleAlertIcon />
+  <AlertTitle>Payment failed</AlertTitle>
+  <AlertDescription>The card ending in 4242 was declined.</AlertDescription>
+  <AlertAction>
+    <Button size="xs" variant="outline">
+      Update card
+    </Button>
+  </AlertAction>
+</Alert>
+```
+
+Put an icon as the first child and the alert switches to a two-column grid.
+`AlertAction` takes a third column on the right, so long titles wrap before
+it instead of running underneath.
+
+## Announcing an alert
+
+`Alert` has **no live-region role by default**. Whether a screen reader
+should announce it depends on how it appears, not on its colour:
+
+- Rendered with the page (a trial banner, a maintenance notice): leave it as
+  is. It is static content, read in order like everything else.
+- Inserted after something the user did and it needs attention now (a failed
+  save): add `role="alert"`.
+- Inserted after something the user did, but it can wait (an export
+  finished): add `role="status"`.
+
+<ComponentPreview name="alert-live-demo" />
+
+## What's different from shadcn/ui
+
+- shadcn puts `role="alert"` on every alert. On static content that either
+  interrupts the screen reader on page load or is ignored; Fujin leaves the
+  decision to you (see above).
+- Three extra variants - `success`, `warning`, `info` - using the status
+  tokens from `@fujin/theme`.
+- Status variants colour the border, a light tint and the icon, and keep the
+  text in `foreground` / `muted-foreground`. Coloured text fails 4.5:1 for
+  `destructive` and badly for yellow `warning`.
+- `AlertTitle` wraps instead of truncating to one line.
+- `AlertAction` is new.
+
+## Pitfalls
+
+- Colour is not a message (WCAG 1.4.1). Say the severity in the text -
+  "Error: changes not saved", not just a red box.
+- `AlertTitle` is a `div`. Pass `role="heading" aria-level={n}` when the
+  alert should appear in the page outline.
+- The icon must be a **direct** child of `Alert` for the grid to pick it up.
+
+## API Reference
+
+<TypeTable
+  type={{
+    "Alert.variant": {
+      type: '"default" | "destructive" | "success" | "warning" | "info"',
+      default: '"default"',
+    },
+    "Alert.role": {
+      type: '"alert" | "status"',
+      description:
+        "Not set by default. Add it only when the alert is inserted dynamically.",
+    },
+  }}
+/>
+
+Every part renders a `div` and forwards all props.

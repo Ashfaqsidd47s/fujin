@@ -1,0 +1,101 @@
+---
+title: Slider
+description: Pick a number, or a range, by clicking, dragging or using the keyboard.
+component: slider
+links:
+  api: https://base-ui.com/react/components/slider
+---
+
+<ComponentPreview name="slider-demo" align="start" />
+
+## Installation
+
+```package-install
+npx shadcn@latest add @fujin/slider
+```
+
+## Usage
+
+```tsx
+import { Slider } from "@/components/ui/slider"
+```
+
+```tsx
+<Slider defaultValue={40} aria-label="Volume" />
+```
+
+One thumb is rendered per value: a number gives one thumb, an array gives
+one thumb per entry.
+
+```tsx
+<Slider
+  defaultValue={[200, 600]}
+  max={1000}
+  step={10}
+  getAriaLabel={(index) => (index === 0 ? "Minimum price" : "Maximum price")}
+/>
+```
+
+## Labelling each thumb
+
+Every thumb is a native range input and needs its own accessible name.
+
+| Situation                   | Do this                                           |
+| --------------------------- | ------------------------------------------------- |
+| One thumb inside a `Field`  | Nothing - `FieldLabel` names it.                  |
+| One thumb, no visible label | `aria-label="Volume"` (forwarded to the thumb).   |
+| Range (two or more thumbs)  | `getAriaLabel={(i) => ...}` so the thumbs differ. |
+| Announced value needs units | `format={...}` or `getAriaValueText`.             |
+
+## Not drag-only
+
+Clicking anywhere on the track moves the nearest thumb there, and every thumb
+responds to Arrow keys, Page Up/Down (`largeStep`) and Home/End. Dragging is
+never the only way to set a value (WCAG 2.5.7).
+
+## What's different from shadcn/ui
+
+- `defaultValue={40}` works; shadcn requires `[40]`. With an array,
+  `onValueChange` reports an array.
+- `getAriaLabel` / `aria-label` go to the thumbs, where screen readers need
+  them. shadcn puts `aria-label` on the root `div`, which names nothing.
+- The thumb is 16px but has a 24px hit area, the control strip is 24px tall,
+  and the focus ring is solid.
+- The range part is `data-slot="slider-range"`, like shadcn; style dragging
+  with `data-[dragging]:`.
+
+## API Reference
+
+<TypeTable
+  type={{
+    value: { type: "number | number[]", description: "Controlled value." },
+    defaultValue: { type: "number | number[]" },
+    onValueChange: {
+      type: "(value: number | number[], details) => void",
+      description: "Fires continuously while dragging.",
+    },
+    onValueCommitted: {
+      type: "(value: number | number[], details) => void",
+      description: "Fires once on release - use it for saves and requests.",
+    },
+    min: { type: "number", default: "0" },
+    max: { type: "number", default: "100" },
+    step: { type: "number", default: "1" },
+    largeStep: { type: "number", default: "10" },
+    minStepsBetweenValues: { type: "number", default: "0" },
+    orientation: {
+      type: '"horizontal" | "vertical"',
+      default: '"horizontal"',
+    },
+    getAriaLabel: {
+      type: "(index: number) => string",
+      description: "Accessible name per thumb. Wins over aria-label.",
+    },
+    getAriaValueText: {
+      type: "(formatted: string, value: number, index: number) => string",
+    },
+  }}
+/>
+
+Every other prop is forwarded to the Base UI
+[Slider](https://base-ui.com/react/components/slider) root.

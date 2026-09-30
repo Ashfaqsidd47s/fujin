@@ -1,0 +1,76 @@
+---
+title: Meter
+description: A measurement within a known range, like storage used or quota consumed.
+component: meter
+links:
+  api: https://base-ui.com/react/components/meter
+---
+
+<ComponentPreview name="meter-demo" />
+
+## Installation
+
+```package-install
+npx shadcn@latest add @fujin/meter
+```
+
+## Usage
+
+```tsx
+import { Meter, MeterLabel, MeterValue } from "@/components/ui/meter"
+```
+
+```tsx
+<Meter
+  value={32.4}
+  max={50}
+  getAriaValueText={(_, value) => `${value} of 50 GB`}
+>
+  <MeterLabel>Storage used</MeterLabel>
+  <MeterValue>{(_, value) => `${value} of 50 GB`}</MeterValue>
+</Meter>
+```
+
+Like `progress`, `Meter` renders its own track and bar; label and value go
+inside as children. Without a `MeterLabel`, pass `aria-label`.
+
+## Meter or progress?
+
+| Showing                                         | Use        |
+| ----------------------------------------------- | ---------- |
+| A task moving towards done (upload, import)     | `progress` |
+| A level within a range (storage, quota, rating) | `meter`    |
+
+Screen readers announce them differently (`meter` vs `progressbar`), so pick
+by meaning, not looks. A meter has no indeterminate state.
+
+## Pitfalls
+
+- `MeterValue` is `aria-hidden`; screen readers hear `aria-valuetext`, which
+  defaults to a percentage of the range. When `MeterValue` shows something
+  else ("32.4 of 50 GB"), pass the same text through `getAriaValueText`.
+- Function children and `getAriaValueText` are functions, so the component
+  that passes them must be a Client Component.
+- To colour the bar for "nearly full", target it from the root:
+  `className="[&_[data-slot=meter-indicator]]:bg-destructive"` - and say it in
+  text too, since colour alone is not enough (WCAG 1.4.1).
+
+## API Reference
+
+<TypeTable
+  type={{
+    "Meter.value": { type: "number", required: true },
+    "Meter.min": { type: "number", default: "0" },
+    "Meter.max": { type: "number", default: "100" },
+    "Meter.format": {
+      type: "Intl.NumberFormatOptions",
+      description: "How the value is formatted. Defaults to a percentage.",
+    },
+    "Meter.getAriaValueText": {
+      type: "(formattedValue: string, value: number) => string",
+    },
+  }}
+/>
+
+Every other prop is forwarded to the Base UI
+[Meter](https://base-ui.com/react/components/meter).

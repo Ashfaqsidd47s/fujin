@@ -1,0 +1,106 @@
+---
+title: Number Field
+description: A numeric input with stepper buttons, min/max/step and locale-aware currency or percent formatting.
+component: number-field
+links:
+  api: https://base-ui.com/react/components/number-field
+---
+
+<ComponentPreview name="number-field-demo" align="start" />
+
+## Installation
+
+```package-install
+npx shadcn@latest add @fujin/number-field
+```
+
+## Usage
+
+```tsx
+import { NumberField } from "@/components/ui/number-field"
+```
+
+```tsx
+<Field name="quantity">
+  <FieldLabel>Quantity</FieldLabel>
+  <NumberField defaultValue={1} min={1} max={99} />
+</Field>
+```
+
+With no children, `NumberField` renders the decrement button, input and
+increment button. Arrow Up/Down step by `step`, Shift+Arrow by `largeStep`
+(10) and Alt+Arrow by `smallStep` (0.1). The stepper buttons are left out of
+the Tab order because the arrow keys do the same job.
+
+## Currency and percent
+
+`format` takes `Intl.NumberFormatOptions` and formats in the user's locale
+(or `locale`). Percent values are fractions: `0.15` shows as `15%`.
+
+```tsx
+<NumberField
+  value={price}
+  onValueChange={setPrice}
+  min={0}
+  format={{ style: "currency", currency: "EUR" }}
+/>
+
+<NumberField defaultValue={0.15} min={0} max={1} step={0.01} format={{ style: "percent" }} />
+```
+
+## Custom layout
+
+Compose the parts to reorder the buttons or to pass input props such as
+`placeholder`:
+
+```tsx
+import {
+  NumberField,
+  NumberFieldGroup,
+  NumberFieldIncrement,
+  NumberFieldInput,
+} from "@/components/ui/number-field"
+
+;<NumberField min={0}>
+  <NumberFieldGroup>
+    <NumberFieldInput placeholder="0" />
+    <NumberFieldIncrement />
+  </NumberFieldGroup>
+</NumberField>
+```
+
+## When not to use it
+
+Digit strings are not numbers. Use `Input` with `inputMode="numeric"` for
+phone numbers, card numbers and ZIP codes, and `OTPField` for verification
+codes - stepping or reformatting them would be wrong.
+
+## API Reference
+
+<TypeTable
+  type={{
+    value: {
+      type: "number | null",
+      description: "Controlled value. `null` when the input is empty.",
+    },
+    onValueChange: { type: "(value: number | null, details) => void" },
+    onValueCommitted: {
+      type: "(value: number | null, details) => void",
+      description: "Fires on blur or when a stepper press ends.",
+    },
+    min: { type: "number" },
+    max: { type: "number" },
+    step: { type: "number | 'any'", default: "1" },
+    format: {
+      type: "Intl.NumberFormatOptions",
+      description: "Currency, percent, unit and fraction-digit formatting.",
+    },
+    children: {
+      type: "ReactNode",
+      description: "Omit for the default `- [input] +` layout.",
+    },
+  }}
+/>
+
+Every other prop is forwarded to the Base UI
+[NumberField](https://base-ui.com/react/components/number-field).

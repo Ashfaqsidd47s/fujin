@@ -1,0 +1,72 @@
+---
+title: Scroll Area
+description: A native scroll container with styled scrollbars.
+component: scroll-area
+links:
+  api: https://base-ui.com/react/components/scroll-area
+---
+
+<ComponentPreview name="scroll-area-demo" />
+
+## Installation
+
+```package-install
+npx shadcn@latest add @fujin/scroll-area
+```
+
+## Usage
+
+```tsx
+import { ScrollArea } from "@/components/ui/scroll-area"
+```
+
+```tsx
+<ScrollArea className="h-72 rounded-md border">...</ScrollArea>
+```
+
+Give the root a height (`h-72`) or a maximum (`max-h-72`); the viewport
+inherits either.
+
+## Horizontal
+
+Both scrollbars are built in and only appear on an axis that overflows. Give
+wide content `w-max` so it does not wrap.
+
+<ComponentPreview name="scroll-area-horizontal-demo" />
+
+## Keyboard access
+
+While the content overflows, the viewport is in the tab order so keyboard
+users can scroll it with the arrow keys (WCAG 2.1.1). When it is a tab stop,
+name it:
+
+```tsx
+<ScrollArea viewportProps={{ role: "region", "aria-label": "Releases" }}>
+```
+
+## What's different from shadcn/ui
+
+- Don't add `<ScrollBar orientation="horizontal" />` as a child: both
+  scrollbars are already rendered, and a second one would duplicate it.
+- `viewportProps` reaches the scrolling element (`ref`, `onScroll`,
+  `aria-label`). shadcn has no way to get at it.
+- The focus indicator is a solid inset outline, not a translucent ring.
+- The scrollbar shows on hover, while scrolling, and while focus is inside.
+
+## API Reference
+
+<TypeTable
+  type={{
+    "ScrollArea.viewportProps": {
+      type: "ScrollArea.Viewport.Props",
+      description: "Props for the scrolling element, including `ref`.",
+    },
+    "ScrollBar.orientation": {
+      type: '"vertical" | "horizontal"',
+      default: '"vertical"',
+    },
+  }}
+/>
+
+Every other prop is forwarded to the Base UI
+[Scroll Area](https://base-ui.com/react/components/scroll-area) root.

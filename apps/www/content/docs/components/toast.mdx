@@ -1,0 +1,173 @@
+---
+title: Toast
+description: Brief, non-blocking notifications with a sonner-style API - toast.success(), toast.promise() and friends.
+component: toast
+links:
+  api: https://base-ui.com/react/components/toast
+---
+
+<ComponentPreview name="toast-demo" />
+
+## Installation
+
+```package-install
+npx shadcn@latest add @fujin/toast
+```
+
+## Setup
+
+Render `<Toaster />` **once**, in your root layout. Every `toast()` call in the
+app shows up there.
+
+```tsx title="app/layout.tsx"
+import { Toaster } from "@/components/ui/toast"
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <html lang="en">
+      <body>
+        {children}
+        <Toaster />
+      </body>
+    </html>
+  )
+}
+```
+
+`Toaster` is a client component, so it can go straight into a Server Component
+layout. If a second `Toaster` is mounted by mistake, only the first one shows
+toasts (and you get a console warning in development).
+
+## Usage
+
+```tsx
+import { toast } from "@/components/ui/toast"
+```
+
+```tsx
+toast("Event created")
+toast.success("Changes saved", { description: "Your profile is up to date." })
+toast.error("Payment failed", { description: "The card was declined." })
+toast.warning("Storage almost full")
+toast.info("A new version is available")
+```
+
+`toast` is a plain function. Call it from event handlers, effects, or modules
+outside React (a fetch wrapper, a store). Toasts fired before the `Toaster`
+has mounted - say, in a page's first effect - are queued and shown once it
+does.
+
+## Promise
+
+```tsx
+toast.promise(saveInvoice(), {
+  loading: "Saving invoice...",
+  success: (invoice) => `Invoice ${invoice.number} saved`,
+  error: (error) => ({
+    title: "Could not save the invoice",
+    description: String(error),
+  }),
+})
+```
+
+Shows a loading toast (which never times out), then swaps it for a success or
+error toast in place. It returns the original promise, so you can still
+`await` it; a rejection is reported by the toast and never left unhandled.
+
+## Action
+
+```tsx
+toast("Message archived", {
+  action: { label: "Undo", onClick: () => restore(id) },
+})
+```
+
+The toast closes after the action runs; call `event.preventDefault()` in
+`onClick` to keep it open. Toasts with an action stay up for 10 seconds by
+default instead of 5.
+
+## Updating and dismissing
+
+```tsx
+const id = toast.loading("Uploading 3 files...")
+// later
+toast.success("Upload complete", { id }) // replaces the loading toast
+toast.dismiss(id) // or toast.dismiss() to close all
+```
+
+## Accessibility
+
+- The toast stack is a landmark region named "Notifications" and a polite
+  live region, so new toasts are announced without moving focus.
+  `toast.error` uses `priority: "high"`, which announces assertively.
+- Hovering or focusing the stack pauses every timer. <kbd>F6</kbd> moves focus
+  into the stack.
+- Toasts can be swiped away, but each one also has a 24px close button, so
+  swiping is never required.
+- Only the `title` and `description` strings are announced for high-priority
+  toasts. Pass text, not rich markup, when the message matters.
+- Do not put the only way to do something in a toast. It disappears, and it
+  is easy to miss with a screen magnifier.
+
+## What's different from shadcn/ui
+
+shadcn/ui wraps sonner. Fujin wraps Base UI's Toast behind the same call
+shape (`toast()`, `toast.success()`, `toast.promise()`, `toast.dismiss()`), so
+there is no extra dependency. Two differences from sonner:
+
+- `toast.promise` returns the original promise rather than an object with
+  `unwrap()`.
+- Rich colors are replaced by a coloured icon per type; the text keeps normal
+  contrast in every theme.
+
+## API Reference
+
+<TypeTable
+  type={{
+    "Toaster.position": {
+      type: '"top-left" | "top-center" | "top-right" | "bottom-left" | "bottom-center" | "bottom-right"',
+      default: '"bottom-right"',
+    },
+    "Toaster.limit": {
+      type: "number",
+      default: "3",
+      description:
+        "Toasts visible at once. Older ones are hidden, not removed.",
+    },
+    "Toaster.timeout": {
+      type: "number",
+      default: "5000",
+      description: "Default auto-dismiss delay in ms. `0` disables it.",
+    },
+    "toast(title, options?)": {
+      type: "string",
+      description: "Returns the toast id.",
+    },
+    "options.description": { type: "ReactNode" },
+    "options.id": {
+      type: "string",
+      description: "Reuse an id to update a toast in place.",
+    },
+    "options.timeout": {
+      type: "number",
+      description: "`0` keeps the toast open.",
+    },
+    "options.priority": { type: '"low" | "high"', default: '"low"' },
+    "options.action": {
+      type: "{ label: ReactNode; onClick: (event) => void }",
+    },
+    "options.onClose": { type: "() => void" },
+    "toast.promise(promise, { loading, success, error })": {
+      type: "Promise<T>",
+    },
+    "toast.update(id, content)": { type: "void" },
+    "toast.dismiss(id?)": { type: "void" },
+  }}
+/>
+
+See Base UI's [Toast](https://base-ui.com/react/components/toast) for the
+underlying manager and parts.

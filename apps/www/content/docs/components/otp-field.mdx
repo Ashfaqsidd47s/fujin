@@ -1,0 +1,136 @@
+---
+title: OTP Field
+description: A one-time code input with a slot per character - the equivalent of shadcn/ui's input-otp.
+component: otp-field
+links:
+  api: https://base-ui.com/react/components/otp-field
+---
+
+<ComponentPreview name="otp-field-demo" align="start" />
+
+## Installation
+
+```package-install
+npx shadcn@latest add @fujin/otp-field
+```
+
+## Usage
+
+```tsx
+import {
+  OTPField,
+  OTPFieldGroup,
+  OTPFieldSeparator,
+  OTPFieldSlot,
+} from "@/components/ui/otp-field"
+```
+
+```tsx
+<Field name="code">
+  <FieldLabel>Verification code</FieldLabel>
+  <OTPField length={6} onValueComplete={verify} />
+</Field>
+```
+
+With no children, `OTPField` renders `length` slots in one group. Codes are
+digits only by default; the first slot has `autoComplete="one-time-code"` so
+iOS and Android offer the code from an SMS, and pasting the whole code into
+any slot fills every slot.
+
+## Grouped slots
+
+```tsx
+<OTPField length={6}>
+  <OTPFieldGroup>
+    <OTPFieldSlot />
+    <OTPFieldSlot />
+    <OTPFieldSlot />
+  </OTPFieldGroup>
+  <OTPFieldSeparator />
+  <OTPFieldGroup>
+    <OTPFieldSlot />
+    <OTPFieldSlot />
+    <OTPFieldSlot />
+  </OTPFieldGroup>
+</OTPField>
+```
+
+## Verifying the code
+
+`onValueComplete` fires when every slot is filled, whether typed or pasted.
+Keep the entered code on failure and show the error with `FieldError` - do
+not clear the slots.
+
+```tsx
+const [invalid, setInvalid] = React.useState(false)
+
+<Field name="code" invalid={invalid}>
+  <FieldLabel>Verification code</FieldLabel>
+  <OTPField
+    length={6}
+    onValueChange={() => setInvalid(false)}
+    onValueComplete={async (code) => setInvalid(!(await verify(code)))}
+  />
+  <FieldError errors={[invalid ? "That code is not valid." : null]} />
+</Field>
+```
+
+Pass `autoSubmit` to submit the surrounding form instead.
+
+## Alphanumeric codes
+
+```tsx
+<OTPField
+  length={8}
+  validationType="alphanumeric"
+  normalizeValue={(value) => value.toUpperCase()}
+/>
+```
+
+## What's different from shadcn/ui
+
+shadcn's `input-otp` draws fake slots over one hidden input. Base UI's
+OTPField uses a real input per slot:
+
+- Slots have no `index` prop - the order comes from the DOM.
+- The root takes `length` (required) instead of `maxLength`.
+- Characters are filtered by `validationType` (`"numeric"` by default)
+  instead of a regex `pattern`.
+- Slots after the first are labelled "Character n of m" automatically; pass
+  `aria-label` on a slot to localise it.
+
+## API Reference
+
+<TypeTable
+  type={{
+    length: {
+      type: "number",
+      description:
+        "Number of slots. Required, and must match the slots you render.",
+    },
+    value: { type: "string" },
+    onValueChange: { type: "(value: string, details) => void" },
+    onValueComplete: {
+      type: "(value: string, details) => void",
+      description: "Fires when every slot is filled.",
+    },
+    autoSubmit: {
+      type: "boolean",
+      default: "false",
+      description: "Submits the owning form when complete.",
+    },
+    validationType: {
+      type: '"numeric" | "alpha" | "alphanumeric" | "none"',
+      default: '"numeric"',
+    },
+    mask: {
+      type: "boolean",
+      default: "false",
+      description: "Obscures the characters.",
+    },
+    autoComplete: { type: "string", default: '"one-time-code"' },
+  }}
+/>
+
+Every other prop is forwarded to the Base UI
+[OTPField](https://base-ui.com/react/components/otp-field).

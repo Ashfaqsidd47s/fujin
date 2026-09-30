@@ -1,0 +1,48 @@
+---
+title: Label
+description: A standalone label for controls outside a Field, such as a checkbox with text beside it.
+component: label
+---
+
+<ComponentPreview name="label-demo" align="start" />
+
+## Installation
+
+```package-install
+npx shadcn@latest add @fujin/label
+```
+
+## Usage
+
+```tsx
+import { Label } from "@/components/ui/label"
+```
+
+```tsx
+<Label>
+  <Checkbox name="receipts" />
+  Email me a receipt for every order
+</Label>
+```
+
+Wrap Base UI controls (`Checkbox`, `Switch`) rather than pointing `htmlFor`
+at them: they render a `<span>` plus a hidden input, so `htmlFor` would target
+the hidden input. `htmlFor` is fine for native `<input>` and `<select>`.
+
+Inside a `<Field>`, use `FieldLabel` instead - it is linked to the control
+and reflects the field's invalid and disabled state.
+
+## Disabled state
+
+The label dims when the control before it is disabled (`peer`), or when an
+ancestor `group` has `data-disabled`. When it wraps a disabled control it
+mutes its text instead, because the control already lowers its own opacity.
+
+## What's different from shadcn/ui
+
+shadcn's `Label` wraps Radix's label primitive. Fujin's is a plain `<label>`
+with no `"use client"`, so it works in Server Components.
+
+## API Reference
+
+`Label` takes every `<label>` attribute.

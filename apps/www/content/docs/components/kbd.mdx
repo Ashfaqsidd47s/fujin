@@ -1,0 +1,51 @@
+---
+title: Kbd
+description: A keyboard key or shortcut, rendered as a native kbd element.
+component: kbd
+---
+
+<ComponentPreview name="kbd-demo" />
+
+## Installation
+
+```package-install
+npx shadcn@latest add @fujin/kbd
+```
+
+## Usage
+
+```tsx
+import { Kbd, KbdGroup } from "@/components/ui/kbd"
+```
+
+```tsx
+<KbdGroup>
+  <Kbd>Ctrl</Kbd>+<Kbd>K</Kbd>
+</KbdGroup>
+```
+
+Inside a `TooltipContent` the chip inverts to stay visible on the dark
+tooltip.
+
+## Symbols
+
+Screen readers read `⌘`, `⌥` and `⇧` inconsistently, or not at all. Hide the
+glyph and give the name:
+
+```tsx
+<Kbd>
+  <span aria-hidden>⌘</span>
+  <span className="sr-only">Command</span>
+</Kbd>
+```
+
+## What's different from shadcn/ui
+
+- Text uses `foreground`: shadcn's grey-on-grey measures about 4.3:1, under
+  the 4.5:1 AA minimum at this size.
+- `KbdGroup` renders `<kbd>` (not `<div>`), which is how HTML marks up a key
+  combination.
+
+## API Reference
+
+`Kbd` and `KbdGroup` both render `<kbd>` and forward all props.

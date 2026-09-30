@@ -1,0 +1,74 @@
+---
+title: Switch
+description: An on/off toggle for settings that apply immediately.
+component: switch
+links:
+  api: https://base-ui.com/react/components/switch
+---
+
+<ComponentPreview name="switch-demo" align="start" />
+
+## Installation
+
+```package-install
+npx shadcn@latest add @fujin/switch
+```
+
+## Usage
+
+```tsx
+import { Switch } from "@/components/ui/switch"
+```
+
+```tsx
+<Field orientation="horizontal">
+  <FieldLabel>Weekly digest</FieldLabel>
+  <Switch checked={digest} onCheckedChange={setDigest} />
+</Field>
+```
+
+Outside a Field, wrap it in a `Label`. A sibling `<label htmlFor>` does not
+work because the switch renders a `<span>` plus a hidden input.
+
+```tsx
+<Label>
+  <Switch size="sm" />
+  Compact rows
+</Label>
+```
+
+## Switch or checkbox?
+
+Use a switch when the change takes effect immediately. When the choice only
+applies once a form is submitted, or for consent ("I accept the terms"), use
+`Checkbox`.
+
+## What's different from shadcn/ui
+
+- The off track uses `muted-foreground` instead of the pale `input` color, so
+  the track and thumb meet the 3:1 non-text contrast WCAG 1.4.11 requires.
+- Both sizes have a 24px-tall hit area (WCAG 2.5.8), even though the `sm`
+  track is drawn at 16px.
+- The focus ring is solid.
+
+## API Reference
+
+<TypeTable
+  type={{
+    checked: { type: "boolean", description: "Controlled checked state." },
+    onCheckedChange: { type: "(checked: boolean, details) => void" },
+    size: {
+      type: '"default" | "sm"',
+      default: '"default"',
+      description: "36x20px or 28x16px track.",
+    },
+    uncheckedValue: {
+      type: "string",
+      description:
+        "Submitted when off. By default an off switch submits nothing.",
+    },
+  }}
+/>
+
+Every other prop is forwarded to the Base UI
+[Switch](https://base-ui.com/react/components/switch).

@@ -1,0 +1,108 @@
+---
+title: Radio Group
+description: A set of options where exactly one can be chosen.
+component: radio-group
+links:
+  api: https://base-ui.com/react/components/radio
+---
+
+<ComponentPreview name="radio-group-demo" align="start" />
+
+## Installation
+
+```package-install
+npx shadcn@latest add @fujin/radio-group
+```
+
+## Usage
+
+```tsx
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+```
+
+```tsx
+<RadioGroup defaultValue="comfortable" aria-label="Density">
+  <label className="flex items-center gap-3 text-sm">
+    <RadioGroupItem value="compact" />
+    Compact
+  </label>
+  <label className="flex items-center gap-3 text-sm">
+    <RadioGroupItem value="comfortable" />
+    Comfortable
+  </label>
+</RadioGroup>
+```
+
+## Labelling
+
+Two names are needed: one for the group and one per option.
+
+- **Each option:** wrap the `RadioGroupItem` in a `<label>`. The item renders
+  a `<span role="radio">` precisely so an enclosing label works. Do not use
+  `FieldLabel` per option - inside a `Field` it points at the group's control,
+  not at the individual radio.
+- **The group:** in a form, render the `FieldSet` _as_ the group so its legend
+  names it, and put the `Field` around it for `name`, validation and
+  submission:
+
+```tsx
+<Field name="plan">
+  <FieldSet render={<RadioGroup defaultValue="pro" />} className="gap-3">
+    <FieldLegend className="text-sm">Plan</FieldLegend>
+    <label className="flex items-center gap-3 text-sm">
+      <RadioGroupItem value="hobby" />
+      Hobby
+    </label>
+    <label className="flex items-center gap-3 text-sm">
+      <RadioGroupItem value="pro" />
+      Pro
+    </label>
+  </FieldSet>
+</Field>
+```
+
+Outside a form, `aria-label` or `aria-labelledby` on `RadioGroup` is enough.
+
+## Horizontal
+
+```tsx
+<RadioGroup orientation="horizontal" defaultValue="md" aria-label="Size">
+  ...
+</RadioGroup>
+```
+
+`orientation` only changes the layout; arrow keys move between options in
+both directions either way.
+
+## What's different from shadcn/ui
+
+- The item is a `<span>`, not a `<button>`, so an enclosing `<label>` is the
+  labelling pattern instead of `id` + `htmlFor`.
+- The 16px circle has a 24px hit area (WCAG 2.5.8) and a solid focus ring.
+- Style checked items with `data-[checked]:` (Base UI), not
+  `data-[state=checked]:`.
+
+## API Reference
+
+<TypeTable
+  type={{
+    value: { type: "Value", description: "Controlled selected value." },
+    defaultValue: { type: "Value" },
+    onValueChange: { type: "(value: Value, details) => void" },
+    orientation: {
+      type: '"vertical" | "horizontal"',
+      default: '"vertical"',
+      description: "Layout direction.",
+    },
+    name: {
+      type: "string",
+      description: "Form field name. A surrounding Field's name wins.",
+    },
+    required: { type: "boolean", default: "false" },
+    disabled: { type: "boolean", default: "false" },
+    "RadioGroupItem.value": { type: "Value", required: true },
+  }}
+/>
+
+Every other prop is forwarded to the Base UI
+[RadioGroup and Radio](https://base-ui.com/react/components/radio).

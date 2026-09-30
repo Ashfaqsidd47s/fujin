@@ -1,0 +1,70 @@
+---
+title: Empty
+description: An empty state - what is missing, why, and what to do next.
+component: empty
+---
+
+<ComponentPreview name="empty-demo" />
+
+## Installation
+
+```package-install
+npx shadcn@latest add @fujin/empty
+```
+
+## Usage
+
+```tsx
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty"
+```
+
+```tsx
+<Empty>
+  <EmptyHeader>
+    <EmptyMedia variant="icon">
+      <ReceiptIcon />
+    </EmptyMedia>
+    <EmptyTitle>No invoices yet</EmptyTitle>
+    <EmptyDescription>
+      Create your first invoice to get started.
+    </EmptyDescription>
+  </EmptyHeader>
+  <EmptyContent>
+    <Button>Create invoice</Button>
+  </EmptyContent>
+</Empty>
+```
+
+## Writing a good empty state
+
+- Say what is missing and whether that is expected ("No invoices yet") or
+  the result of a filter ("No invoices match 'overdue'").
+- Always offer a next step in `EmptyContent`. For a filtered view that is
+  "Clear filters", not "Create".
+- `Empty` has a dashed border style ready; add `border` to show it.
+
+## What's different from shadcn/ui
+
+`EmptyMedia` is `aria-hidden` by default - it is almost always a decorative
+icon. Pass `aria-hidden={false}` when it carries meaning.
+
+## API Reference
+
+<TypeTable
+  type={{
+    "EmptyMedia.variant": {
+      type: '"default" | "icon"',
+      default: '"default"',
+      description: "`icon` puts the icon on a muted rounded tile.",
+    },
+  }}
+/>
+
+Every part renders a `div` and forwards all props.

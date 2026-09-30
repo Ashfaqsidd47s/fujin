@@ -171,3 +171,14 @@
 [data-rehype-pretty-code-figure] code > [data-line] {
   padding-inline: 1rem;
 }
+
+/* Mirrors the `css` block of the progress registry item, which installs it
+   into consumers' stylesheets. */
+@keyframes progress-indeterminate {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(300%);
+  }
+}

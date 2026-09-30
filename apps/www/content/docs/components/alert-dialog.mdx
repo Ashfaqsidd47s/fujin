@@ -1,0 +1,113 @@
+---
+title: Alert Dialog
+description: A confirmation that interrupts the user and waits for an answer - it cannot be dismissed by clicking outside.
+component: alert-dialog
+links:
+  api: https://base-ui.com/react/components/alert-dialog
+---
+
+<ComponentPreview name="alert-dialog-demo" />
+
+## Installation
+
+```package-install
+npx shadcn@latest add @fujin/alert-dialog
+```
+
+## Usage
+
+```tsx
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+```
+
+```tsx
+<AlertDialog>
+  <AlertDialogTrigger render={<Button variant="destructive">Delete</Button>} />
+  <AlertDialogContent>
+    <AlertDialogHeader>
+      <AlertDialogTitle>Delete this project?</AlertDialogTitle>
+      <AlertDialogDescription>This can't be undone.</AlertDialogDescription>
+    </AlertDialogHeader>
+    <AlertDialogFooter>
+      <AlertDialogCancel>Cancel</AlertDialogCancel>
+      <AlertDialogAction variant="destructive" onClick={deleteProject}>
+        Delete
+      </AlertDialogAction>
+    </AlertDialogFooter>
+  </AlertDialogContent>
+</AlertDialog>
+```
+
+Keep `AlertDialogCancel` first in the footer. Focus moves to the first button
+when the dialog opens, so pressing Enter straight away cancels instead of
+deleting. The footer's `flex-col-reverse`/`sm:flex-row` layout still shows the
+action on the right (or on top, on small screens).
+
+## Async actions
+
+`AlertDialogAction` closes the dialog on click. When the work can fail, use a
+plain `Button` with `loading` and close the dialog yourself once it succeeds,
+so an error can be shown in place:
+
+```tsx
+const [open, setOpen] = React.useState(false)
+const [pending, startTransition] = React.useTransition()
+
+<AlertDialog open={open} onOpenChange={setOpen}>
+  <AlertDialogContent>
+    {/* header */}
+    <AlertDialogFooter>
+      <AlertDialogCancel>Cancel</AlertDialogCancel>
+      <Button
+        variant="destructive"
+        loading={pending}
+        onClick={() =>
+          startTransition(async () => {
+            await deleteProject()
+            setOpen(false)
+          })
+        }
+      >
+        Delete
+      </Button>
+    </AlertDialogFooter>
+  </AlertDialogContent>
+</AlertDialog>
+```
+
+## What's different from shadcn/ui
+
+- `AlertDialogAction` and `AlertDialogCancel` render a Fujin `Button` and take
+  its `variant` and `size` props directly - no `buttonVariants` class juggling.
+  Cancel defaults to `outline`.
+- `render` replaces `asChild`, from Base UI.
+
+## API Reference
+
+<TypeTable
+  type={{
+    "AlertDialog.open": { type: "boolean" },
+    "AlertDialog.onOpenChange": { type: "(open: boolean, details) => void" },
+    "AlertDialogAction.variant": {
+      type: '"default" | "destructive" | "outline" | "secondary" | "ghost" | "link"',
+      default: '"default"',
+    },
+    "AlertDialogCancel.variant": {
+      type: '"default" | "destructive" | "outline" | "secondary" | "ghost" | "link"',
+      default: '"outline"',
+    },
+  }}
+/>
+
+Every other prop is forwarded to the Base UI
+[Alert Dialog](https://base-ui.com/react/components/alert-dialog).

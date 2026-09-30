@@ -1,0 +1,153 @@
+---
+title: Select
+description: Choose one or more options from a short list in a popup.
+component: select
+links:
+  api: https://base-ui.com/react/components/select
+---
+
+<ComponentPreview name="select-demo" align="start" />
+
+## Installation
+
+```package-install
+npx shadcn@latest add @fujin/select
+```
+
+## Usage
+
+```tsx
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+```
+
+```tsx
+const themes = [
+  { value: "light", label: "Light" },
+  { value: "dark", label: "Dark" },
+  { value: "system", label: "System" },
+]
+
+<Select items={themes}>
+  <SelectTrigger aria-label="Theme">
+    <SelectValue placeholder="Select a theme" />
+  </SelectTrigger>
+  <SelectContent>
+    {themes.map((theme) => (
+      <SelectItem key={theme.value} value={theme.value}>
+        {theme.label}
+      </SelectItem>
+    ))}
+  </SelectContent>
+</Select>
+```
+
+Pass `items` to `Select`. It is how `SelectValue` finds the label for the
+selected value; without it the trigger shows the raw value (`"light"`) until
+you give `SelectValue` a formatter function as its child.
+
+## In a form
+
+```tsx
+<Field name="region">
+  <FieldLabel nativeLabel={false} render={<div />}>
+    Region
+  </FieldLabel>
+  <Select items={regions}>
+    <SelectTrigger className="w-full">
+      <SelectValue placeholder="Select a region" />
+    </SelectTrigger>
+    <SelectContent>...</SelectContent>
+  </Select>
+  <FieldDescription>Where your data is stored.</FieldDescription>
+</Field>
+```
+
+`Field` labels and describes the trigger and submits the value under its
+`name`. A plain `<FieldLabel>` works too, but because it is a native
+`<label>`, clicking it also opens the popup; `nativeLabel={false}
+render={<div />}` makes a label click only focus the trigger, like a native
+`<select>`.
+
+## Popup position
+
+By default the popup overlaps the trigger so the selected item sits exactly
+over the trigger text (`alignItemWithTrigger`). In that mode `side` and
+`align` are ignored. It falls back to a normal dropdown on touch input, or
+when there is not enough room. Pass `alignItemWithTrigger={false}` to
+`SelectContent` for a dropdown below the trigger - usually better for
+`multiple`. Scroll arrows appear at the top and bottom of long lists.
+
+## Multiple selection
+
+<ComponentPreview name="select-multiple-demo" />
+
+```tsx
+<Select items={channels} multiple value={value} onValueChange={setValue}>
+  <SelectTrigger aria-label="Notification channels">
+    <SelectValue placeholder="No channels" />
+  </SelectTrigger>
+  <SelectContent alignItemWithTrigger={false}>...</SelectContent>
+</Select>
+```
+
+The trigger shows the selected labels comma-separated. For long lists, or
+when users need to see each selection, use `combobox` with chips.
+
+## Groups
+
+```tsx
+<SelectContent>
+  <SelectGroup>
+    <SelectLabel>Europe</SelectLabel>
+    <SelectItem value="eu-west">EU West (Ireland)</SelectItem>
+  </SelectGroup>
+  <SelectSeparator />
+  ...
+</SelectContent>
+```
+
+## What's different from shadcn/ui
+
+- `items` on `Select` replaces Radix's automatic label lookup; see Usage.
+- `onValueChange` receives `null` when nothing is selected.
+- `SelectLabel` is a group heading (Base UI `GroupLabel`), as in shadcn -
+  label the whole select with `FieldLabel` or `aria-label`.
+- `SelectTrigger` has solid focus and invalid rings, and picks up
+  `data-invalid` from a surrounding `Field`.
+
+## API Reference
+
+<TypeTable
+  type={{
+    items: {
+      type: "{ value, label }[] | Record<string, ReactNode>",
+      description: "Lets SelectValue render the label for the selected value.",
+    },
+    value: { type: "Value | Value[] | null" },
+    defaultValue: { type: "Value | Value[] | null" },
+    onValueChange: { type: "(value, details) => void" },
+    multiple: { type: "boolean", default: "false" },
+    name: { type: "string", description: "A surrounding Field's name wins." },
+    "SelectTrigger.size": { type: '"sm" | "default"', default: '"default"' },
+    "SelectValue.placeholder": { type: "ReactNode" },
+    "SelectContent.alignItemWithTrigger": { type: "boolean", default: "true" },
+    "SelectContent.side": {
+      type: '"top" | "right" | "bottom" | "left"',
+      default: '"bottom"',
+      description: "Only when alignItemWithTrigger is off or falls back.",
+    },
+    "SelectContent.align": {
+      type: '"start" | "center" | "end"',
+      default: '"start"',
+    },
+  }}
+/>
+
+Every other prop is forwarded to the Base UI
+[Select](https://base-ui.com/react/components/select).

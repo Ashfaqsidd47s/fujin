@@ -1,0 +1,99 @@
+---
+title: Breadcrumb
+description: The path from the site root to the current page.
+component: breadcrumb
+---
+
+<ComponentPreview name="breadcrumb-demo" />
+
+## Installation
+
+```package-install
+npx shadcn@latest add @fujin/breadcrumb
+```
+
+## Usage
+
+```tsx
+import Link from "next/link"
+
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb"
+```
+
+```tsx
+<Breadcrumb>
+  <BreadcrumbList>
+    <BreadcrumbItem>
+      <BreadcrumbLink render={<Link href="/" />}>Home</BreadcrumbLink>
+    </BreadcrumbItem>
+    <BreadcrumbSeparator />
+    <BreadcrumbItem>
+      <BreadcrumbPage>Invoices</BreadcrumbPage>
+    </BreadcrumbItem>
+  </BreadcrumbList>
+</Breadcrumb>
+```
+
+Every part is plain HTML, so the trail renders in a Server Component.
+`BreadcrumbLink` uses Base UI's `useRender`, which skips its hooks on the
+server.
+
+## Collapsed levels
+
+`BreadcrumbEllipsis` is only a marker. Put it inside a menu trigger and list
+the hidden levels in the menu, so they stay reachable.
+
+```tsx
+<BreadcrumbItem>
+  <DropdownMenu>
+    <DropdownMenuTrigger aria-label="Show hidden levels">
+      <BreadcrumbEllipsis />
+    </DropdownMenuTrigger>
+    <DropdownMenuContent align="start">
+      <DropdownMenuItem render={<Link href="/docs" />}>
+        Documentation
+      </DropdownMenuItem>
+    </DropdownMenuContent>
+  </DropdownMenu>
+</BreadcrumbItem>
+```
+
+## What's different from shadcn/ui
+
+- `render` replaces `asChild` on `BreadcrumbLink`, same as `button`.
+- `BreadcrumbPage` is a plain `<span aria-current="page">`. shadcn also adds
+  `role="link" aria-disabled="true"`, which announces a link that isn't one.
+- `BreadcrumbEllipsis` is not `aria-hidden`, so its "More" text is read.
+- Links are at least 24px tall and get a solid focus ring.
+
+## API Reference
+
+<TypeTable
+  type={{
+    "Breadcrumb.aria-label": { type: "string", default: '"Breadcrumb"' },
+    "BreadcrumbLink.render": {
+      type: "ReactElement | (props, state) => ReactElement",
+      description: "Render a router link instead of a plain `<a>`.",
+    },
+    "BreadcrumbSeparator.children": {
+      type: "ReactNode",
+      default: "<ChevronRightIcon />",
+      description: "Custom separator glyph. Always hidden from assistive tech.",
+    },
+    "BreadcrumbEllipsis.label": {
+      type: "string",
+      default: '"More"',
+      description: "Screen-reader text.",
+    },
+  }}
+/>
+
+`BreadcrumbLink` uses Base UI's
+[useRender](https://base-ui.com/react/utils/use-render).

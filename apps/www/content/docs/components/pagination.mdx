@@ -1,0 +1,141 @@
+---
+title: Pagination
+description: Previous, next and a page window that keeps its width.
+component: pagination
+---
+
+<ComponentPreview name="pagination-demo" />
+
+## Installation
+
+```package-install
+npx shadcn@latest add @fujin/pagination
+```
+
+This also installs `@fujin/use-pagination` (`lib/pagination.ts`), the
+headless window logic.
+
+## Usage
+
+```tsx
+import { PaginationControls } from "@/components/ui/pagination"
+```
+
+```tsx
+const [page, setPage] = React.useState(1)
+
+<PaginationControls page={page} pageCount={24} onPageChange={setPage} />
+```
+
+Pages are 1-based. TanStack Table's `pageIndex` is 0-based - pass
+`page={pageIndex + 1}` and `onPageChange={(p) => setPageIndex(p - 1)}`.
+
+## The page window
+
+`getPageWindow` decides which numbers to show. Once there are more pages than
+fit, it always returns `2 * boundaries + 2 * siblings + 3` items, so the
+control keeps its width while you page through - nothing jumps under the
+pointer. An ellipsis never hides a single page; that page is shown instead.
+
+```ts
+import { getPageWindow } from "@/lib/pagination"
+
+getPageWindow({ page: 1, pageCount: 20 }) // [1, 2, 3, 4, 5, "ellipsis", 20]
+getPageWindow({ page: 10, pageCount: 20 }) // [1, "ellipsis", 9, 10, 11, "ellipsis", 20]
+getPageWindow({ page: 20, pageCount: 20 }) // [1, "ellipsis", 16, 17, 18, 19, 20]
+```
+
+## Link mode
+
+Pass `getHref` to render links instead of buttons, and `renderLink` for a
+router link. `page` comes from the URL.
+
+```tsx
+"use client"
+
+<PaginationControls
+  page={page}
+  pageCount={pageCount}
+  getHref={(p) => `?page=${p}`}
+  renderLink={(href) => <Link href={href} />}
+/>
+```
+
+A Server Component cannot pass functions to `PaginationControls`. Build the
+same markup from the parts and `getPageWindow`, which is server-safe:
+
+<ComponentPreview name="pagination-parts-demo" />
+
+## Your own markup
+
+`usePagination` holds the page state (controlled or uncontrolled) and the
+window, with no markup:
+
+```tsx
+import { usePagination } from "@/lib/pagination"
+
+const { page, items, canPrev, canNext, prev, next, setPage } = usePagination({
+  pageCount: 12,
+  defaultPage: 1,
+  onPageChange: (page) => fetchPage(page),
+})
+```
+
+## What's different from shadcn/ui
+
+- `PaginationControls` and `getPageWindow` are new: shadcn ships the parts
+  but no page-window logic.
+- `render` replaces `asChild` on `PaginationLink`.
+- Previous/Next keep their visible text as the accessible name (shadcn's
+  `aria-label` replaces it). Below `sm` the text is visually hidden.
+- `disabled` on a link or button sets `aria-disabled` instead of removing it
+  from the page, so a focused "Next" button keeps focus at the last page.
+- Every target is at least 36px, above the 24px WCAG 2.5.8 minimum.
+
+## API Reference
+
+<TypeTable
+  type={{
+    "PaginationControls.page": {
+      type: "number",
+      description: "Current page, 1-based. Omit for uncontrolled.",
+    },
+    "PaginationControls.defaultPage": { type: "number", default: "1" },
+    "PaginationControls.pageCount": { type: "number", required: true },
+    "PaginationControls.onPageChange": {
+      type: "(page: number) => void",
+      description: "Button mode. Not called in link mode.",
+    },
+    "PaginationControls.getHref": {
+      type: "(page: number) => string",
+      description: "Switches to link mode.",
+    },
+    "PaginationControls.renderLink": {
+      type: "(href: string, page: number) => ReactElement",
+      description: "Link mode: e.g. `(href) => <Link href={href} />`.",
+    },
+    "PaginationControls.siblings": { type: "number", default: "1" },
+    "PaginationControls.boundaries": { type: "number", default: "1" },
+    "PaginationControls.labels": {
+      type: "{ previous?, next?, page?: (n) => string, ellipsis? }",
+      description: "Translatable text.",
+    },
+    "PaginationLink.isActive": {
+      type: "boolean",
+      default: "false",
+      description: 'Outline style and `aria-current="page"`.',
+    },
+    "PaginationLink.disabled": {
+      type: "boolean",
+      default: "false",
+      description: "Sets `aria-disabled`, drops `href`, ignores clicks.",
+    },
+    "PaginationLink.render": {
+      type: "ReactElement | (props, state) => ReactElement",
+      description: 'A router link, or `<button type="button" />`.',
+    },
+  }}
+/>
+
+`PaginationLink` uses Base UI's
+[useRender](https://base-ui.com/react/utils/use-render).

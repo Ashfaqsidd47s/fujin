@@ -1,0 +1,115 @@
+---
+title: Tabs
+description: Switch between related panels in the same place, as a segmented control or underlined tabs.
+component: tabs
+links:
+  api: https://base-ui.com/react/components/tabs
+---
+
+<ComponentPreview name="tabs-demo" />
+
+## Installation
+
+```package-install
+npx shadcn@latest add @fujin/tabs
+```
+
+## Usage
+
+```tsx
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+```
+
+```tsx
+<Tabs defaultValue="account">
+  <TabsList>
+    <TabsTrigger value="account">Account</TabsTrigger>
+    <TabsTrigger value="password">Password</TabsTrigger>
+  </TabsList>
+  <TabsContent value="account">...</TabsContent>
+  <TabsContent value="password">...</TabsContent>
+</Tabs>
+```
+
+## Line variant and vertical tabs
+
+<ComponentPreview name="tabs-line-demo" />
+
+```tsx
+<Tabs defaultValue="overview" orientation="vertical">
+  <TabsList variant="line" indicator>
+    ...
+  </TabsList>
+  ...
+</Tabs>
+```
+
+`orientation="vertical"` lays the list out as a column and switches arrow-key
+navigation to Up/Down.
+
+## Animated indicator
+
+Pass `indicator` to `TabsList` to slide one highlight between tabs (Base UI's
+`Tabs.Indicator`) instead of restyling the active tab. It is rendered before
+hydration, so the active tab is marked on the server-rendered page too.
+
+## Tabs as links
+
+For route-based tabs, render each trigger as a link and drive `value` from the
+current path:
+
+```tsx
+<Tabs value={pathname}>
+  <TabsList variant="line">
+    <TabsTrigger
+      value="/settings"
+      nativeButton={false}
+      render={<Link href="/settings" />}
+    >
+      General
+    </TabsTrigger>
+  </TabsList>
+</Tabs>
+```
+
+## What's different from shadcn/ui
+
+- `indicator` adds an animated highlight, built on Base UI's `Tabs.Indicator`.
+- Triggers are at least 28px tall and use a solid focus ring (WCAG 2.5.8,
+  1.4.11).
+- Arrow keys move focus; Enter or Space activates. Pass
+  `activateOnFocus` to `TabsList` to activate on arrow keys instead.
+
+## API Reference
+
+<TypeTable
+  type={{
+    "Tabs.defaultValue": { type: "any", default: "0" },
+    "Tabs.value": { type: "any", description: "Controlled active tab." },
+    "Tabs.onValueChange": { type: "(value, details) => void" },
+    "Tabs.orientation": {
+      type: '"horizontal" | "vertical"',
+      default: '"horizontal"',
+    },
+    "TabsList.variant": {
+      type: '"default" | "line"',
+      default: '"default"',
+    },
+    "TabsList.indicator": {
+      type: "boolean",
+      default: "false",
+      description: "Slide an animated indicator between tabs.",
+    },
+    "TabsList.activateOnFocus": { type: "boolean", default: "false" },
+    "TabsTrigger.value": { type: "any", required: true },
+    "TabsContent.value": { type: "any", required: true },
+    "TabsContent.keepMounted": {
+      type: "boolean",
+      default: "false",
+      description: "Keep hidden panels in the DOM (and their form state).",
+    },
+  }}
+/>
+
+Every other prop is forwarded to the Base UI
+[Tabs](https://base-ui.com/react/components/tabs).
