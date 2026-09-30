@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Registry, typecheck and build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Version comes from `packageManager` in package.json.
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # The registry build imports @fujin/schema from its dist output.
+      - name: Build workspace packages
+        run: pnpm --filter "./packages/*" build
+
+      - name: Build registry
+        run: pnpm --filter www registry:build
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Build site
+        run: pnpm --filter www build
