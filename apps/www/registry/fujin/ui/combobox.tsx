@@ -1,9 +1,17 @@
 "use client"
 
+import * as React from "react"
 import { Combobox as ComboboxPrimitive } from "@base-ui/react/combobox"
-import { CheckIcon, ChevronDownIcon, XIcon } from "lucide-react"
+import { CheckIcon, ChevronDownIcon, PlusIcon, XIcon } from "lucide-react"
 
+import {
+  isComboboxCreateItem,
+  useComboboxCreatable,
+  type ComboboxCreatableInputKeyDown,
+  type ComboboxCreateHandler,
+} from "@/registry/fujin/lib/combobox-creatable"
 import { cn } from "@/registry/fujin/lib/utils"
+import { Spinner } from "@/registry/fujin/ui/spinner"
 
 /*
  * A form control: a text input that filters a fixed list of options and
@@ -20,21 +28,102 @@ import { cn } from "@/registry/fujin/lib/utils"
  * Typed text is not a value. In single mode, when the popup closes the input
  * snaps back to the selected item's label (or empties if nothing is
  * selected); in multiple mode the filter text is cleared. For free text with
- * suggestions, use Base UI's Autocomplete instead.
+ * suggestions, use Base UI's Autocomplete instead - or `onCreate`, which
+ * offers `Create "<text>"` when nothing matches and adds the result as an
+ * option (see lib/combobox-creatable.ts).
  */
+
+type ComboboxContextValue = {
+  itemToLabel: (item: unknown) => string
+  itemToKey: (item: unknown, index: number) => string
+  onInputKeyDown: ComboboxCreatableInputKeyDown | undefined
+}
+
+const ComboboxContext = React.createContext<ComboboxContextValue>({
+  itemToLabel: labelOf,
+  itemToKey: (item, index) => keyOf(item) ?? String(index),
+  onInputKeyDown: undefined,
+})
+
+function labelOf(item: unknown): string {
+  if (typeof item === "object" && item !== null && "label" in item) {
+    return String((item as { label: unknown }).label)
+  }
+  return item == null ? "" : String(item)
+}
+
+function keyOf(item: unknown): string | undefined {
+  if (typeof item !== "object" || item === null) return String(item)
+  for (const key of ["id", "value"] as const) {
+    if (key in item) return String((item as Record<string, unknown>)[key])
+  }
+  return undefined
+}
 
 type ComboboxProps<
   Value,
   Multiple extends boolean | undefined = false,
   Item = Value,
-> = ComboboxPrimitive.Root.Props<Value, Multiple, Item>
+> = ComboboxPrimitive.Root.Props<Value, Multiple, Item> & {
+  /**
+   * Makes the combobox creatable: when the typed text matches no item's
+   * label exactly, a `Create "<text>"` option appears (and Enter with nothing
+   * highlighted picks it). Return the new item - or a promise of it - to
+   * select it; also add it to `items` so it stays in the list. Return
+   * nothing to cancel. Flat `items` only.
+   */
+  onCreate?: ComboboxCreateHandler<Value>
+  /** Label of the create option. Defaults to `Create "<text>"`. */
+  formatCreateLabel?: (query: string) => string
+}
 
 function Combobox<
   Value,
   Multiple extends boolean | undefined = false,
   Item = Value,
->(props: ComboboxProps<Value, Multiple, Item>) {
-  return <ComboboxPrimitive.Root {...props} />
+>({
+  onCreate,
+  formatCreateLabel,
+  ...props
+}: ComboboxProps<Value, Multiple, Item>) {
+  const creatable = useComboboxCreatable<Value>({
+    ...props,
+    items: props.items as readonly unknown[] | undefined,
+    multiple: Boolean(props.multiple),
+    onCreate,
+    formatCreateLabel,
+  })
+
+  const { itemToStringLabel, itemToStringValue } = props
+  const context = React.useMemo<ComboboxContextValue>(
+    () => ({
+      itemToLabel: (item) =>
+        itemToStringLabel ? itemToStringLabel(item as Value) : labelOf(item),
+      itemToKey: (item, index) =>
+        (itemToStringValue ? itemToStringValue(item as Value) : keyOf(item)) ??
+        String(index),
+      onInputKeyDown: creatable.onInputKeyDown,
+    }),
+    [itemToStringLabel, itemToStringValue, creatable.onInputKeyDown]
+  )
+
+  return (
+    <ComboboxContext.Provider value={context}>
+      <ComboboxPrimitive.Root {...props} {...creatable.rootProps} />
+    </ComboboxContext.Provider>
+  )
+}
+
+/** Runs the caller's handler, then the creatable Enter handling. */
+function useInputKeyDown(
+  onKeyDown: ComboboxPrimitive.Input.Props["onKeyDown"]
+): ComboboxPrimitive.Input.Props["onKeyDown"] {
+  const { onInputKeyDown } = React.useContext(ComboboxContext)
+  if (!onInputKeyDown) return onKeyDown
+  return (event) => {
+    onKeyDown?.(event)
+    if (!event.defaultPrevented) onInputKeyDown(event)
+  }
 }
 
 /** Renders the selected value(s); a function child receives them. */
@@ -62,8 +151,11 @@ function ComboboxInput({
   showTrigger = true,
   showClear = false,
   disabled,
+  onKeyDown,
   ...props
 }: ComboboxInputProps) {
+  const handleKeyDown = useInputKeyDown(onKeyDown)
+
   return (
     <ComboboxPrimitive.InputGroup
       data-slot="combobox-input-group"
@@ -80,6 +172,7 @@ function ComboboxInput({
         data-slot="combobox-input"
         disabled={disabled}
         className="h-full min-w-0 flex-1 bg-transparent px-3 text-base outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed md:text-sm"
+        onKeyDown={handleKeyDown}
         {...props}
       />
       {showClear ? (
@@ -178,7 +271,36 @@ function ComboboxEmpty({ className, ...props }: ComboboxPrimitive.Empty.Props) {
 
 type ComboboxItemProps = ComboboxPrimitive.Item.Props
 
+/**
+ * With `onCreate`, the list's render function also receives the create
+ * option; this renders it (plus icon, `Create "<text>"`, busy state) whatever
+ * the children are, so one `(item) => <ComboboxItem>` covers both.
+ */
 function ComboboxItem({ className, children, ...props }: ComboboxItemProps) {
+  const createItem = isComboboxCreateItem(props.value) ? props.value : null
+
+  if (createItem) {
+    return (
+      <ComboboxPrimitive.Item
+        data-slot="combobox-create-item"
+        disabled={createItem.pending}
+        aria-busy={createItem.pending || undefined}
+        className={cn(
+          "relative flex min-h-8 w-full cursor-default items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none select-none data-[disabled]:pointer-events-none data-[disabled]:text-muted-foreground data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground [&_svg]:size-4 [&_svg]:shrink-0",
+          className
+        )}
+        {...props}
+      >
+        {createItem.pending ? (
+          <Spinner label={null} />
+        ) : (
+          <PlusIcon aria-hidden />
+        )}
+        <span className="truncate">{createItem.label}</span>
+      </ComboboxPrimitive.Item>
+    )
+  }
+
   return (
     <ComboboxPrimitive.Item
       data-slot="combobox-item"
@@ -243,20 +365,51 @@ function ComboboxSeparator({
   )
 }
 
-type ComboboxChipsProps = ComboboxPrimitive.Chips.Props
+type ComboboxChipsProps = ComboboxPrimitive.Chips.Props & {
+  /**
+   * While focus is outside the field, show only this many chips plus a
+   * "+N more" count; focusing the field shows them all. Only applies when
+   * `ComboboxChips` renders the chips itself (no children).
+   */
+  limit?: number
+  /** Renders a button that clears every selected item. */
+  showClear?: boolean
+  /** Placeholder for the built-in input, shown while nothing is selected. */
+  placeholder?: string
+  /** Props for the built-in `ComboboxChipsInput`. */
+  inputProps?: ComboboxPrimitive.Input.Props
+  /** Chip content for the built-in chips. Defaults to the item's label. */
+  renderChip?: (item: never) => React.ReactNode
+}
 
 /**
- * The bordered box for `multiple` mode: holds the chips and a
- * `ComboboxChipsInput`, and is what the popup anchors to. Give it an
- * `aria-label` such as "Selected frameworks" - it becomes a toolbar once
- * there are chips.
+ * The bordered box for `multiple` mode, and what the popup anchors to. With
+ * no children it renders a chip per selected item plus the input; pass
+ * children (`ComboboxValue` > `ComboboxChip`s + `ComboboxChipsInput`) to take
+ * over. Long selections wrap up to a max height (`max-h-*` on `className`
+ * of the list via `[&>[data-slot=combobox-chips-list]]`, or the
+ * `--combobox-chips-max-height` variable), then scroll.
+ *
+ * Give it an `aria-label` such as "Selected frameworks" - it becomes a
+ * toolbar once there are chips.
  */
-function ComboboxChips({ className, ...props }: ComboboxChipsProps) {
+function ComboboxChips({
+  className,
+  children,
+  limit,
+  showClear = false,
+  placeholder,
+  inputProps,
+  renderChip,
+  ...props
+}: ComboboxChipsProps) {
+  const { itemToLabel, itemToKey } = React.useContext(ComboboxContext)
+
   return (
     <ComboboxPrimitive.InputGroup
       data-slot="combobox-chips"
       className={cn(
-        "flex min-h-9 w-full cursor-text items-center rounded-md border border-input bg-transparent px-1.5 py-1 shadow-xs transition-[color,box-shadow] dark:bg-input/30",
+        "group/chips flex min-h-9 w-full cursor-text items-start gap-1 rounded-md border border-input bg-transparent py-1 pr-1 pl-1.5 shadow-xs transition-[color,box-shadow] dark:bg-input/30",
         "focus-within:border-ring focus-within:ring-2 focus-within:ring-ring",
         "data-[invalid]:border-destructive data-[invalid]:focus-within:ring-destructive",
         "data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50",
@@ -265,9 +418,66 @@ function ComboboxChips({ className, ...props }: ComboboxChipsProps) {
     >
       <ComboboxPrimitive.Chips
         data-slot="combobox-chips-list"
-        className="flex min-w-0 flex-1 flex-wrap items-center gap-1"
+        className={cn(
+          // Padding keeps a focused chip's ring inside the scroll clip.
+          "-m-0.5 flex max-h-(--combobox-chips-max-height,8.5rem) min-w-0 flex-1 flex-wrap items-center gap-1 overflow-y-auto overscroll-contain p-0.5",
+          // Unfocused with chips (no placeholder shown), the empty input
+          // yields its row so "+N more" doesn't wrap onto a line of its own.
+          "group-[:not(:focus-within)]/chips:[&>[data-slot=combobox-chips-input]:not(:placeholder-shown)]:min-w-0"
+        )}
         {...props}
-      />
+      >
+        {children ?? (
+          <ComboboxPrimitive.Value>
+            {(selected: unknown) => {
+              const chips = Array.isArray(selected) ? selected : []
+              const hidden =
+                limit !== undefined ? Math.max(chips.length - limit, 0) : 0
+
+              return (
+                <>
+                  {chips.map((item, index) => {
+                    const label = itemToLabel(item)
+                    return (
+                      <ComboboxChip
+                        key={itemToKey(item, index)}
+                        data-overflow={
+                          limit !== undefined && index >= limit ? "" : undefined
+                        }
+                        removeLabel={`Remove ${label}`}
+                        className="data-[overflow]:group-[:not(:focus-within)]/chips:hidden"
+                      >
+                        {renderChip ? renderChip(item as never) : label}
+                      </ComboboxChip>
+                    )
+                  })}
+                  {hidden > 0 ? (
+                    <span
+                      data-slot="combobox-chips-overflow"
+                      className="hidden h-6 items-center rounded-sm px-1.5 text-xs font-medium text-muted-foreground group-[:not(:focus-within)]/chips:inline-flex"
+                    >
+                      +{hidden} more
+                    </span>
+                  ) : null}
+                  <ComboboxChipsInput
+                    placeholder={chips.length > 0 ? undefined : placeholder}
+                    {...inputProps}
+                  />
+                </>
+              )
+            }}
+          </ComboboxPrimitive.Value>
+        )}
+      </ComboboxPrimitive.Chips>
+      {showClear ? (
+        <ComboboxPrimitive.Clear
+          data-slot="combobox-clear"
+          aria-label="Clear all"
+          className={cn(iconButtonClassName, "mt-0.5")}
+        >
+          <XIcon />
+        </ComboboxPrimitive.Clear>
+      ) : null}
     </ComboboxPrimitive.InputGroup>
   )
 }
@@ -275,12 +485,15 @@ function ComboboxChips({ className, ...props }: ComboboxChipsProps) {
 type ComboboxChipProps = ComboboxPrimitive.Chip.Props & {
   /** Renders the remove button. Backspace/Delete removes a focused chip either way. */
   showRemove?: boolean
+  /** Accessible name of the remove button. Defaults to "Remove <children>" for string children. */
+  removeLabel?: string
 }
 
 function ComboboxChip({
   className,
   children,
   showRemove = true,
+  removeLabel,
   ...props
 }: ComboboxChipProps) {
   return (
@@ -297,7 +510,8 @@ function ComboboxChip({
       {showRemove ? (
         <ComboboxChipRemove
           aria-label={
-            typeof children === "string" ? `Remove ${children}` : "Remove"
+            removeLabel ??
+            (typeof children === "string" ? `Remove ${children}` : "Remove")
           }
         />
       ) : null}
@@ -331,11 +545,15 @@ function ComboboxChipRemove({
 /** The text input inside `ComboboxChips`. */
 function ComboboxChipsInput({
   className,
+  onKeyDown,
   ...props
 }: ComboboxPrimitive.Input.Props) {
+  const handleKeyDown = useInputKeyDown(onKeyDown)
+
   return (
     <ComboboxPrimitive.Input
       data-slot="combobox-chips-input"
+      onKeyDown={handleKeyDown}
       className={cn(
         "h-7 min-w-16 flex-1 bg-transparent px-1.5 text-base outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed md:text-sm",
         className

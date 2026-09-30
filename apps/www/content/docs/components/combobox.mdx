@@ -73,23 +73,19 @@ reverts to the selected item's label, or empties if nothing is selected. In
 
 <ComponentPreview name="combobox-multiple-demo" align="start" />
 
+With no children, `ComboboxChips` renders a chip per selected item plus the
+input:
+
 ```tsx
 <Combobox items={labels} multiple defaultValue={[labels[0]]}>
-  <ComboboxChips aria-label="Selected labels">
-    <ComboboxValue>
-      {(selected) => (
-        <>
-          {selected.map((item) => (
-            <ComboboxChip key={item.value}>{item.label}</ComboboxChip>
-          ))}
-          <ComboboxChipsInput
-            placeholder={selected.length ? "" : "Add labels..."}
-          />
-        </>
-      )}
-    </ComboboxValue>
-  </ComboboxChips>
+  <ComboboxChips
+    aria-label="Selected labels"
+    placeholder="Add labels..."
+    limit={3}
+    showClear
+  />
   <ComboboxContent>
+    <ComboboxEmpty>No labels found.</ComboboxEmpty>
     <ComboboxList>
       {(item) => (
         <ComboboxItem key={item.value} value={item}>
@@ -104,6 +100,110 @@ reverts to the selected item's label, or empties if nothing is selected. In
 From the start of the input, Left Arrow moves focus into the chips;
 Backspace or Delete removes the focused chip. The remove button is a 24px
 pointer target and is not in the tab order.
+
+### Handling many chips
+
+- **The box stops growing.** Chips wrap up to
+  `--combobox-chips-max-height` (default `8.5rem`, about four rows), then the
+  box scrolls. Set the variable on `ComboboxChips` to change it.
+- **`limit`** collapses the selection while focus is elsewhere: only the first
+  `limit` chips show, followed by "+N more". Clicking or tabbing into the
+  field shows them all again, so every chip stays reachable by keyboard.
+- **`showClear`** adds a 24px "Clear all" button while anything is selected.
+
+To render chips yourself (custom content, avatars), pass children. `limit`
+then no longer applies:
+
+```tsx
+<ComboboxChips aria-label="Selected labels">
+  <ComboboxValue>
+    {(selected) => (
+      <>
+        {selected.map((item) => (
+          <ComboboxChip key={item.value}>{item.label}</ComboboxChip>
+        ))}
+        <ComboboxChipsInput placeholder={selected.length ? "" : "Add..."} />
+      </>
+    )}
+  </ComboboxValue>
+</ComboboxChips>
+```
+
+For custom chip content with the built-in layout, use `renderChip`:
+`<ComboboxChips renderChip={(user) => <><Avatar ... />{user.name}</>} />`.
+
+## Creatable
+
+Pass `onCreate` to let people add an option that isn't in the list. When the
+typed text matches no item's label exactly, a `Create "<text>"` option
+appears at the end of the list; picking it, or pressing Enter with nothing
+highlighted, calls `onCreate(text)`.
+
+<ComponentPreview name="combobox-creatable-demo" align="start" />
+
+```tsx
+const [tags, setTags] = React.useState(initialTags)
+
+<Combobox
+  items={tags}
+  multiple
+  onCreate={async (label) => {
+    const tag = await api.createTag(label)
+    setTags((current) => [...current, tag])
+    return tag
+  }}
+>
+  <ComboboxChips aria-label="Selected tags" placeholder="Add tags..." />
+  <ComboboxContent>
+    <ComboboxEmpty>No tags found.</ComboboxEmpty>
+    <ComboboxList>
+      {(tag) => (
+        <ComboboxItem key={tag.value} value={tag}>
+          {tag.label}
+        </ComboboxItem>
+      )}
+    </ComboboxList>
+  </ComboboxContent>
+</Combobox>
+```
+
+- **Return the new item** to select it, or a promise of it. While the
+  promise is pending, the option shows a spinner and can't be picked again.
+  Return nothing to cancel.
+- **Add it to `items` yourself.** `onCreate` doesn't touch your list, so the
+  item would vanish from it once deselected.
+- **Handle errors inside `onCreate`.** Show a toast or a field error; a
+  rejected promise selects nothing.
+- **Exact matches aren't duplicated.** Text that matches an existing label
+  (case-insensitive, trimmed) selects that item instead.
+- **Your list renderer covers the create option.** `ComboboxItem` renders
+  the plus icon and label itself.
+- **Flat `items` only.** Grouped items get no create option.
+
+It works the same in single mode. `formatCreateLabel` changes the option's
+text:
+
+<ComponentPreview name="combobox-creatable-single-demo" align="start" />
+
+```tsx
+<Combobox
+  items={companies}
+  value={company}
+  onValueChange={setCompany}
+  onCreate={(label) => {
+    const created = { value: crypto.randomUUID(), label }
+    setCompanies((current) => [...current, created])
+    return created
+  }}
+  formatCreateLabel={(label) => `Add "${label}" as a new company`}
+>
+  <ComboboxInput placeholder="Search or add a company..." showClear />
+  ...
+</Combobox>
+```
+
+The logic lives in `lib/combobox-creatable.ts` (`useComboboxCreatable`), so
+you can use it on a bare Base UI Combobox too.
 
 ## Groups
 
@@ -152,9 +252,31 @@ filtering driven by `items`.
       default: "false",
       description: "Highlight the first match while typing, so Enter picks it.",
     },
+    onCreate: {
+      type: "(query: string) => Value | void | Promise<Value | void>",
+      description:
+        "Makes it creatable. Return the new item (or a promise) to select it.",
+    },
+    formatCreateLabel: {
+      type: "(query: string) => string",
+      default: '(q) => `Create "${q}"`',
+    },
     "ComboboxInput.showTrigger": { type: "boolean", default: "true" },
     "ComboboxInput.showClear": { type: "boolean", default: "false" },
+    "ComboboxChips.limit": {
+      type: "number",
+      description:
+        'Chips shown while the field is not focused; the rest become "+N more".',
+    },
+    "ComboboxChips.showClear": { type: "boolean", default: "false" },
+    "ComboboxChips.placeholder": { type: "string" },
+    "ComboboxChips.renderChip": { type: "(item) => ReactNode" },
+    "ComboboxChips.inputProps": { type: "ComboboxChipsInput props" },
     "ComboboxChip.showRemove": { type: "boolean", default: "true" },
+    "ComboboxChip.removeLabel": {
+      type: "string",
+      description: 'Remove button name. Defaults to "Remove <children>".',
+    },
     "ComboboxContent.side": {
       type: '"top" | "right" | "bottom" | "left"',
       default: '"bottom"',

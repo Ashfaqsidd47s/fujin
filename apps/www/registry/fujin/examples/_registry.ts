@@ -399,6 +399,28 @@ export const examples: RegistryItemInput[] = [
     ],
   },
   {
+    name: "combobox-creatable-demo",
+    type: "registry:example",
+    registryDependencies: ["combobox", "field"],
+    files: [
+      {
+        path: "registry/fujin/examples/combobox-creatable-demo.tsx",
+        type: "registry:example",
+      },
+    ],
+  },
+  {
+    name: "combobox-creatable-single-demo",
+    type: "registry:example",
+    registryDependencies: ["combobox", "field"],
+    files: [
+      {
+        path: "registry/fujin/examples/combobox-creatable-single-demo.tsx",
+        type: "registry:example",
+      },
+    ],
+  },
+  {
     name: "slider-demo",
     type: "registry:example",
     registryDependencies: ["slider", "field"],

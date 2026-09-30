@@ -125,4 +125,76 @@ export const lib: RegistryItemInput[] = [
       },
     },
   },
+  {
+    // Named after its main export. Lives in lib/ because it is behaviour with
+    // no markup; `combobox` depends on it and wires it into Base UI.
+    name: "use-combobox-creatable",
+    type: "registry:lib",
+    title: "useComboboxCreatable",
+    categories: ["forms"],
+    description:
+      'Headless creatable-combobox behaviour: a `Create "<text>"` option when nothing matches, and `onCreate` on pick or Enter.',
+    dependencies: ["@base-ui/react"],
+    files: [
+      {
+        path: "registry/fujin/lib/combobox-creatable.ts",
+        type: "registry:lib",
+      },
+    ],
+    meta: {
+      fujin: {
+        summary:
+          "Turns Base UI Combobox root props into creatable ones: appends a create option for unmatched text and swaps picking it for `onCreate(text)`. No markup.",
+        whenToUse: [
+          "Building a custom creatable picker on Base UI Combobox without Fujin's `combobox` markup.",
+        ],
+        whenNotToUse: [
+          "A creatable form field - pass `onCreate` to `combobox`, which already uses this hook.",
+          "Free text where any string is valid - use `input`; nothing needs creating.",
+        ],
+        props: [
+          {
+            name: "onCreate",
+            type: "(query: string) => Value | void | Promise<Value | void>",
+            description:
+              "Enables the behaviour. Return the new item (or a promise) to select it; return nothing to cancel.",
+          },
+          {
+            name: "formatCreateLabel",
+            type: "(query: string) => string",
+            default: '(q) => `Create "${q}"`',
+            description: "Label of the create option.",
+          },
+          {
+            name: "return",
+            type: "{ enabled, rootProps, onInputKeyDown, pendingQuery }",
+            description:
+              "Spread `rootProps` over `Combobox.Root` after your own props; put `onInputKeyDown` on the input.",
+          },
+        ],
+        examples: [
+          {
+            title: "On a bare Base UI Combobox",
+            code: `const creatable = useComboboxCreatable({ ...rootProps, onCreate })
+
+<Combobox.Root {...rootProps} {...creatable.rootProps}>
+  <Combobox.Input onKeyDown={creatable.onInputKeyDown} />
+  ...
+  <Combobox.List>
+    {(item) => isComboboxCreateItem(item)
+      ? <Combobox.Item value={item}>{item.label}</Combobox.Item>
+      : <Combobox.Item value={item}>{item.label}</Combobox.Item>}
+  </Combobox.List>
+</Combobox.Root>`,
+          },
+        ],
+        pitfalls: [
+          "Value and input text become controlled props on the root while enabled; uncontrolled callers get internal state, so pass `defaultValue` to the hook, not the root.",
+          "Flat `items` only - grouped items get no create option (dev warning).",
+          "Exact matches are compared on the item label, case-insensitively and trimmed; an exact match selects the existing item instead of creating.",
+        ],
+        related: ["combobox"],
+      },
+    },
+  },
 ]

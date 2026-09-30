@@ -149,6 +149,14 @@ export const Index: Record<
     name: "combobox-multiple-demo",
     component: React.lazy(() => import("@/registry/fujin/examples/combobox-multiple-demo")),
   },
+  "combobox-creatable-demo": {
+    name: "combobox-creatable-demo",
+    component: React.lazy(() => import("@/registry/fujin/examples/combobox-creatable-demo")),
+  },
+  "combobox-creatable-single-demo": {
+    name: "combobox-creatable-single-demo",
+    component: React.lazy(() => import("@/registry/fujin/examples/combobox-creatable-single-demo")),
+  },
   "slider-demo": {
     name: "slider-demo",
     component: React.lazy(() => import("@/registry/fujin/examples/slider-demo")),

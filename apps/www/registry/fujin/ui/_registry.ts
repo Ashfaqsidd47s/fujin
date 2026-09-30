@@ -2921,10 +2921,14 @@ export const ui: RegistryItemInput[] = [
     type: "registry:ui",
     title: "Combobox",
     description:
-      "A form field that filters a list of options as you type, with single or chip-based multiple selection.",
+      "A form field that filters a list of options as you type, with single or chip-based multiple selection and an optional create-new option.",
     categories: ["primitives", "forms", "overlays"],
     dependencies: ["@base-ui/react", "lucide-react"],
-    registryDependencies: ["@fujin/utils"],
+    registryDependencies: [
+      "@fujin/utils",
+      "@fujin/spinner",
+      "@fujin/use-combobox-creatable",
+    ],
     files: [{ path: "registry/fujin/ui/combobox.tsx", type: "registry:ui" }],
     meta: {
       links: { api: "https://base-ui.com/react/components/combobox" },
@@ -2934,6 +2938,7 @@ export const ui: RegistryItemInput[] = [
         whenToUse: [
           "Choosing from a long list in a form (country, timezone, assignee, framework) where typing to narrow it is faster than scrolling.",
           "Tagging-style multi-select where each selection should stay visible and removable (`multiple` + chips).",
+          "The list is open-ended and people may need to add a missing option (tags, labels, a new company) - pass `onCreate`.",
         ],
         whenNotToUse: [
           "A short list (roughly under 15) where scanning is faster than typing - use `select`.",
@@ -2942,12 +2947,14 @@ export const ui: RegistryItemInput[] = [
           "Two to six options that should all be visible - use `radio-group`.",
           "Actions rather than values - use `dropdown-menu`.",
         ],
-        anatomy: `<Combobox items value onValueChange multiple?>
+        anatomy: `<Combobox items value onValueChange multiple? onCreate? formatCreateLabel?>
   <ComboboxInput showTrigger showClear />          // single
-  <ComboboxChips aria-label>                       // multiple
+  <ComboboxChips aria-label placeholder limit showClear />  // multiple, chips built in
+  // or take over the chips:
+  <ComboboxChips aria-label>
     <ComboboxValue>
       {(selected) => <>
-        <ComboboxChip showRemove />
+        <ComboboxChip showRemove removeLabel />
         <ComboboxChipsInput />
       </>}
     </ComboboxValue>
@@ -3004,6 +3011,20 @@ export const ui: RegistryItemInput[] = [
               "Highlight the first match while typing so Enter picks it.",
           },
           {
+            owner: "Combobox",
+            name: "onCreate",
+            type: "(query: string) => Value | void | Promise<Value | void>",
+            description:
+              'Makes it creatable: unmatched text shows a `Create "<text>"` option, and Enter with nothing highlighted picks it. Return the new item (or a promise) to select it and add it to `items` yourself; return nothing to cancel. While a promise is pending the option shows a spinner and is disabled.',
+          },
+          {
+            owner: "Combobox",
+            name: "formatCreateLabel",
+            type: "(query: string) => string",
+            default: '(q) => `Create "${q}"`',
+            description: "Label of the create option.",
+          },
+          {
             owner: "ComboboxInput",
             name: "showTrigger",
             type: "boolean",
@@ -3017,6 +3038,28 @@ export const ui: RegistryItemInput[] = [
             default: "false",
             description:
               "Clear button (24px), visible while there is a value or text.",
+          },
+          {
+            owner: "ComboboxChips",
+            name: "limit",
+            type: "number",
+            description:
+              'While focus is outside the field, show only this many chips plus "+N more"; focusing shows them all. Built-in chips only.',
+          },
+          {
+            owner: "ComboboxChips",
+            name: "showClear",
+            type: "boolean",
+            default: "false",
+            description:
+              'A 24px "Clear all" button, shown while anything is selected.',
+          },
+          {
+            owner: "ComboboxChips",
+            name: "placeholder / renderChip / inputProps",
+            type: "string / (item) => ReactNode / ComboboxChipsInput props",
+            description:
+              "Built-in mode: input placeholder (shown while empty), chip content (defaults to the label), props for the input.",
           },
           {
             owner: "ComboboxChip",
@@ -3049,22 +3092,33 @@ export const ui: RegistryItemInput[] = [
           {
             title: "Multiple with chips",
             code: `<Combobox items={labels} multiple defaultValue={[labels[0]]}>
-  <ComboboxChips aria-label="Selected labels">
-    <ComboboxValue>
-      {(selected) => (
-        <>
-          {selected.map((item) => (
-            <ComboboxChip key={item.value}>{item.label}</ComboboxChip>
-          ))}
-          <ComboboxChipsInput placeholder={selected.length ? "" : "Add labels..."} />
-        </>
-      )}
-    </ComboboxValue>
-  </ComboboxChips>
+  <ComboboxChips aria-label="Selected labels" placeholder="Add labels..." limit={3} showClear />
   <ComboboxContent>
     <ComboboxEmpty>No labels found.</ComboboxEmpty>
     <ComboboxList>
       {(item) => <ComboboxItem key={item.value} value={item}>{item.label}</ComboboxItem>}
+    </ComboboxList>
+  </ComboboxContent>
+</Combobox>`,
+          },
+          {
+            title: "Creatable tags (async)",
+            code: `const [tags, setTags] = React.useState(initialTags)
+
+<Combobox
+  items={tags}
+  multiple
+  onCreate={async (label) => {
+    const tag = await api.createTag(label) // { value, label }
+    setTags((current) => [...current, tag])
+    return tag
+  }}
+>
+  <ComboboxChips aria-label="Selected tags" placeholder="Add tags..." />
+  <ComboboxContent>
+    <ComboboxEmpty>No tags found.</ComboboxEmpty>
+    <ComboboxList>
+      {(tag) => <ComboboxItem key={tag.value} value={tag}>{tag.label}</ComboboxItem>}
     </ComboboxList>
   </ComboboxContent>
 </Combobox>`,
@@ -3075,7 +3129,11 @@ export const ui: RegistryItemInput[] = [
           "Item values are the item objects. `{ value, label }` objects work out of the box (label shown, value submitted); other shapes need `itemToStringLabel` and `itemToStringValue`, and `isItemEqualToValue` if you recreate objects.",
           "Typed text is not kept: in single mode the input snaps back to the selected label (or empties) when the popup closes; in multiple mode it clears after each pick.",
           "`ComboboxInput`'s `className` styles the bordered box; every other prop goes to the `<input>`.",
-          "In multiple mode, render chips and `ComboboxChipsInput` inside `ComboboxValue`'s function child so they update with the selection, and give `ComboboxChips` an `aria-label`.",
+          "In multiple mode, give `ComboboxChips` an `aria-label`. Without children it renders the chips and input itself; if you pass children, render chips and `ComboboxChipsInput` inside `ComboboxValue`'s function child so they update, and `limit` no longer applies.",
+          "`onCreate` does not add the new item to `items` - do it yourself, or it disappears from the list once deselected. Handle errors inside `onCreate`; a rejected promise selects nothing.",
+          "`onCreate` works with flat `items` only; grouped items get no create option.",
+          "With `onCreate`, value and input text are passed to Base UI as controlled props. `defaultValue`/`defaultInputValue` still work - the wrapper holds the state.",
+          "`ComboboxItem` renders the create option itself (plus icon + label) and ignores its children for it, so one `ComboboxList` renderer covers both - key on `value`/`id`/`label`, which the create option also has.",
           "Keep `ComboboxEmpty` mounted (it is a live region); it collapses itself while there are matches.",
           "Not the same as `command`: don't use `command` for a labelled form field, and don't use this for a filter bar or palette.",
         ],
@@ -3083,7 +3141,9 @@ export const ui: RegistryItemInput[] = [
           "The input is the form control: `FieldLabel` labels it, `FieldDescription`/`FieldError` describe it, via `Field`.",
           "Arrow keys move through matches, Enter selects, Escape closes; in multiple mode Left Arrow from the start of the input walks the chips and Backspace/Delete removes one.",
           "Clear, trigger and chip-remove buttons are 24px targets with `aria-label`s (WCAG 2.5.8). Chip remove buttons are pointer-only; keyboard users remove with Backspace.",
-          '`ComboboxEmpty` announces "no results" politely.',
+          '`ComboboxEmpty` announces "no results" politely. With `onCreate` the create option replaces it, and is announced like any other option.',
+          '"+N more" is plain text read in reading order; hidden chips are `display: none` only while focus is outside the field, so keyboard users always reach every chip.',
+          "The chips box scrolls past `--combobox-chips-max-height` (default 8.5rem) instead of growing without bound; the focused input scrolls into view.",
           "Solid 2px focus ring around the whole input box (WCAG 1.4.11).",
         ],
         tokens: [
