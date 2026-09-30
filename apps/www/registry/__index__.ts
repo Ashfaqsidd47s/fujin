@@ -205,4 +205,8 @@ export const Index: Record<
     name: "toast-demo",
     component: React.lazy(() => import("@/registry/fujin/examples/toast-demo")),
   },
+  "otp-verify-card-demo": {
+    name: "otp-verify-card-demo",
+    component: React.lazy(() => import("@/registry/fujin/examples/otp-verify-card-demo")),
+  },
 }
