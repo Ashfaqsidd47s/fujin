@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { ChevronLeftIcon, CirclePlusIcon, XIcon } from "lucide-react"
+import { CirclePlusIcon, XIcon } from "lucide-react"
 
 import type {
   FilterDef,
@@ -17,7 +17,11 @@ import {
   PopoverTrigger,
 } from "@/registry/fujin/ui/popover"
 
-import { FilterChipLabel, useFilterChipSummary } from "./data-table-filter-chip"
+import {
+  FilterChipLabel,
+  FilterPickerBack,
+  useFilterChipSummary,
+} from "./data-table-filter-chip"
 import { DataTableFilterPicker } from "./data-table-filter-picker"
 
 export type DataTableFilterOverflowProps = {
@@ -31,8 +35,10 @@ export type DataTableFilterOverflowProps = {
   onEdit: (key: string) => void
   /** Leave the picker: back to the chips, or closed if it was opened from the search box. */
   onDoneEditing: () => void
-  /** The picker's back button: always returns to the chips. */
+  /** The picker's back button: to the chips, or the list it was picked from. */
   onBack: () => void
+  /** The back button's text. Default "Applied filters". */
+  backLabel?: string
   onChange: (key: string, value: FilterValue | undefined) => void
   onRemove: (key: string) => void
   onAddFilter?: () => void
@@ -58,6 +64,7 @@ function DataTableFilterOverflow({
   onEdit,
   onDoneEditing,
   onBack,
+  backLabel = "Applied filters",
   onChange,
   onRemove,
   onAddFilter,
@@ -115,12 +122,7 @@ function DataTableFilterOverflow({
       >
         {editingDef ? (
           <div data-slot="data-table-filter-overflow-editor">
-            <div className="border-b p-1">
-              <Button variant="ghost" size="sm" onClick={onBack}>
-                <ChevronLeftIcon aria-hidden />
-                All filters
-              </Button>
-            </div>
+            <FilterPickerBack label={backLabel} onBack={onBack} />
             <DataTableFilterPicker
               def={editingDef}
               value={values[editingDef.key]}

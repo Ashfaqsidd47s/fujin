@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { XIcon } from "lucide-react"
+import { ChevronLeftIcon, XIcon } from "lucide-react"
 
 import {
   filterSummary,
@@ -13,6 +13,7 @@ import type {
 } from "@/registry/fujin/lib/data-table/types"
 import { useResolvedOptions } from "@/registry/fujin/lib/data-table/use-filter-options"
 import { cn } from "@/registry/fujin/lib/utils"
+import { Button } from "@/registry/fujin/ui/button"
 import {
   Popover,
   PopoverContent,
@@ -34,6 +35,8 @@ export type DataTableFilterChipProps = {
   onNavigate?: (direction: -1 | 1) => void
   /** Where focus goes when the picker closes. Default: back to the chip. */
   finalFocus?: PopoverContentProps["finalFocus"]
+  /** Shows "All filters" above the picker: back to the list it was picked from. */
+  onBack?: () => void
   ref?: React.Ref<HTMLButtonElement>
 }
 
@@ -76,6 +79,24 @@ function FilterChipLabel({
   )
 }
 
+/** The picker's back button, to the list the filter was picked from. */
+function FilterPickerBack({
+  label,
+  onBack,
+}: {
+  label: string
+  onBack: () => void
+}) {
+  return (
+    <div data-slot="data-table-filter-back" className="border-b p-1">
+      <Button variant="ghost" size="sm" onClick={onBack}>
+        <ChevronLeftIcon aria-hidden />
+        {label}
+      </Button>
+    </div>
+  )
+}
+
 const CHIP =
   "inline-flex h-7 max-w-full min-w-0 items-center rounded-md bg-muted text-sm"
 const CHIP_FACE = "flex h-full min-w-0 items-center gap-1 rounded-md px-2"
@@ -95,6 +116,7 @@ function DataTableFilterChip({
   onRemove,
   onNavigate,
   finalFocus,
+  onBack,
   ref,
 }: DataTableFilterChipProps) {
   const summary = useFilterChipSummary(def, value)
@@ -161,6 +183,9 @@ function DataTableFilterChip({
         className="w-auto p-0"
         finalFocus={finalFocus ?? true}
       >
+        {onBack ? (
+          <FilterPickerBack label="All filters" onBack={onBack} />
+        ) : null}
         <DataTableFilterPicker
           def={def}
           value={value}
@@ -199,5 +224,6 @@ export {
   DataTableFilterChip,
   DataTableFilterChipGhost,
   FilterChipLabel,
+  FilterPickerBack,
   useFilterChipSummary,
 }

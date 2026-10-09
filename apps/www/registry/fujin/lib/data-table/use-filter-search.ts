@@ -22,7 +22,7 @@ import type {
   FilterValues,
   ListState,
 } from "./types"
-import { useDebouncedSearch, useFilterOptions } from "./use-filter-options"
+import { useFilterOptions } from "./use-filter-options"
 
 /*
  * The behaviour of the search box inside the filter bar, as an ARIA 1.2
@@ -33,10 +33,15 @@ import { useDebouncedSearch, useFilterOptions } from "./use-filter-options"
  * - On focus it lists the filters (pinned first). Picking one asks the bar to
  *   open that filter's chip so a value can be chosen (Shopify).
  * - Typing offers matching filters and matching values: "dr" -> "Status is
- *   Draft". Picking a value applies it at once.
+ *   Draft". The list narrows on every key and the top match is highlighted,
+ *   so Enter picks it. Picking a value applies it at once. With nothing to
+ *   suggest the list stays closed.
  * - Typed qualifiers (`status:active`, `-vendor:acme`, `price:>=10`) become
  *   chips on space, Enter or blur (GitHub); after `status:` it lists values.
- * - Anything else is free text, committed to `q` after a short pause.
+ * - Anything else is free text, committed to `q` after a short pause. While
+ *   the typed word has suggestions the text waits (the user is most likely
+ *   picking a filter): it searches once nothing matches, on Escape, on blur,
+ *   or from the "Search for" option at the end of the list.
  */
 
 export type FilterSuggestion =
@@ -60,10 +65,17 @@ export type FilterSuggestion =
       view: DataTableView
       apply: () => void
     }
+  | {
+      /** Search the typed text instead of picking a suggestion. */
+      kind: "search"
+      id: string
+      text: string
+      apply: () => void
+    }
   | { kind: "hint"; id: string; message: string }
 
 export type FilterSuggestionGroup = {
-  id: "views" | "fields" | "values"
+  id: "views" | "fields" | "values" | "search"
   heading: string
   items: Array<Exclude<FilterSuggestion, { kind: "hint" }>>
 }
@@ -98,6 +110,31 @@ function matchesWord(def: FilterDef<never>, word: string): boolean {
     def.key.toLowerCase().startsWith(needle) ||
     (def.aliases ?? []).some((alias) => alias.toLowerCase().startsWith(needle))
   )
+}
+
+/** 0 for an exact match of the lowercase `typed`, 1 for a prefix, 2 otherwise. */
+function matchRank(option: FilterOption, typed: string): number {
+  const label = option.label.toLowerCase()
+  const value = option.value.toLowerCase()
+  if (label === typed || value === typed) return 0
+  if (label.startsWith(typed) || value.startsWith(typed)) return 1
+  return 2
+}
+
+/** Exact matches first, then prefixes, then the rest, each kept in order. */
+function byMatchRank<T>(
+  items: readonly T[],
+  typed: string,
+  getOption: (item: T) => FilterOption
+): T[] {
+  return items
+    .map((item, index) => ({
+      item,
+      index,
+      rank: matchRank(getOption(item), typed),
+    }))
+    .sort((a, b) => a.rank - b.rank || a.index - b.index)
+    .map(({ item }) => item)
 }
 
 function booleanOptions(def: FilterDef<never>): FilterOption[] {
@@ -216,9 +253,12 @@ export function useFilterSearch({
     input.setSelectionRange(caretRequest.position, caretRequest.position)
   }, [caretRequest])
 
-  /** Typed qualifiers become chips (merged into the filters); the rest is `q`. */
+  /**
+   * Typed qualifiers become chips (merged into the filters); the rest is `q`.
+   * `search: false` applies the qualifiers and leaves `q` as it is.
+   */
   const commit = React.useCallback(
-    (text: string) => {
+    (text: string, { search = true }: { search?: boolean } = {}) => {
       const next = parseQuery(text, defs)
       const typed = Object.keys(next.filters).length > 0
       if (typed) {
@@ -229,11 +269,12 @@ export function useFilterSearch({
         )
         setText(rest.text, rest.caret)
       }
-      const nextQ = allowText ? next.text || undefined : list.q
+      const searching = allowText && search
+      const nextQ = searching ? next.text || undefined : list.q
       if (!typed && nextQ === list.q) return
       setLastExternal(nextQ ?? "")
       list.update({
-        ...(allowText ? { q: nextQ } : {}),
+        ...(searching ? { q: nextQ } : {}),
         ...(typed ? { filters: { ...list.filters, ...next.filters } } : {}),
       })
     },
@@ -261,44 +302,10 @@ export function useFilterSearch({
     asyncDef !== undefined
   )
   const editingQualifier = focused && context.token?.kind === "qualifier"
-  // The word being typed, and the text the list matches: it narrows once
-  // typing pauses. Typing `status:` or a comma switches to that field's values
-  // at once; only narrowing them by the letters that follow waits.
+  // The word being typed, and the text the list matches: after `status:` or
+  // a comma, the letters of the value being typed.
   const word = context.token?.kind === "text" ? context.keyPart.trim() : ""
-  const needle = useDebouncedSearch(
-    context.valuePart !== null ? partial : word,
-    undefined,
-    context.valuePart !== null
-      ? `value:${context.keyPart}:${prefixKey}`
-      : "text"
-  )
-
-  // Free text commits after a pause; a finished qualifier (caret moved past
-  // it) at once. Qualifiers that don't parse stay in the box, with a warning,
-  // and never hold the valid ones back.
-  React.useEffect(() => {
-    if (!focused || editingQualifier) return
-    const typed = Object.keys(parsed.filters).length > 0
-    if (!typed && (!allowText || (parsed.text || undefined) === list.q)) return
-    const timer = window.setTimeout(
-      () => {
-        // Typed on since this was scheduled: the next run commits that instead.
-        if (inputRef.current && inputRef.current.value !== draft) return
-        commit(draft)
-      },
-      typed ? 0 : debounceMs
-    )
-    return () => window.clearTimeout(timer)
-  }, [
-    allowText,
-    commit,
-    debounceMs,
-    draft,
-    editingQualifier,
-    focused,
-    list.q,
-    parsed,
-  ])
+  const typedText = context.valuePart !== null ? partial : word
 
   /** Drops the word under the caret (it found a filter) and applies `filters`. */
   const consumeWord = React.useCallback(
@@ -340,16 +347,10 @@ export function useFilterSearch({
     const groups: FilterSuggestionGroup[] = []
     if (!showFilters) return { hints, groups }
 
-    // A typed qualifier: offer that field's values.
+    // A typed qualifier: offer that field's values. An unknown name offers
+    // nothing (the list stays closed); the warning shows once it commits.
     if (context.valuePart !== null) {
-      if (!activeDef) {
-        hints.push({
-          kind: "hint",
-          id: "unknown",
-          message: `No filter named “${context.keyPart}”.`,
-        })
-        return { hints, groups }
-      }
+      if (!activeDef) return { hints, groups }
       const negation = context.negated ? "-" : ""
       const toItem = (option: FilterOption) => ({
         kind: "value" as const,
@@ -365,25 +366,31 @@ export function useFilterSearch({
             )} `
           ),
       })
-      const typed = needle.value.toLowerCase()
+      const typed = typedText.toLowerCase()
       const matches = (option: FilterOption) =>
         !prefixValues.includes(option.value) &&
         (option.label.toLowerCase().includes(typed) ||
           option.value.toLowerCase().includes(typed))
+      // An exact match goes first, so Enter after `status:active` picks
+      // Active rather than Inactive.
+      const listed = (options: readonly FilterOption[]) =>
+        byMatchRank(options.filter(matches), typed, (option) => option).map(
+          toItem
+        )
 
       switch (activeDef.type) {
         case "enum":
           groups.push({
             id: "values",
             heading: `${activeDef.label} values`,
-            items: activeDef.options.filter(matches).map(toItem),
+            items: listed(activeDef.options),
           })
           break
         case "boolean":
           groups.push({
             id: "values",
             heading: `${activeDef.label} values`,
-            items: booleanOptions(activeDef).filter(matches).map(toItem),
+            items: listed(booleanOptions(activeDef)),
           })
           break
         case "async":
@@ -427,10 +434,13 @@ export function useFilterSearch({
           })
           break
       }
-      return { hints, groups }
+      return {
+        hints,
+        groups: groups.filter((group) => group.items.length > 0),
+      }
     }
 
-    const typed = needle.value
+    const typed = typedText
     const ordered = [
       ...defs.filter((def) => def.pinned),
       ...defs.filter((def) => !def.pinned),
@@ -470,9 +480,10 @@ export function useFilterSearch({
       groups.unshift({ id: "views", heading: "Views", items: matchingViews })
     }
 
-    // "dr" -> "Status is Draft": option values whose label matches the word.
+    // "dr" -> "Status is Draft": option values whose label matches the word,
+    // exact matches and prefixes first.
     const valueNeedle = typed.toLowerCase()
-    const values: FilterSuggestionGroup["items"] = []
+    const values: Array<Extract<FilterSuggestion, { kind: "value" }>> = []
     for (const def of ordered) {
       const options = def.type === "enum" ? def.options : booleanOptions(def)
       for (const option of options) {
@@ -499,24 +510,50 @@ export function useFilterSearch({
       groups.push({
         id: "values",
         heading: "Suggestions",
-        items: values.slice(0, MAX_VALUE_SUGGESTIONS),
+        items: byMatchRank(values, valueNeedle, (item) => item.option).slice(
+          0,
+          MAX_VALUE_SUGGESTIONS
+        ),
+      })
+    }
+
+    // The way out when a word matches a filter but the text is what's wanted.
+    if (allowText && groups.length > 0 && parsed.text !== (list.q ?? "")) {
+      groups.push({
+        id: "search",
+        heading: "Search",
+        items: [
+          {
+            kind: "search",
+            id: "search",
+            text: parsed.text,
+            // Closing the list lets the text through (see the commit effect).
+            apply: () => {
+              setHighlight(-1)
+              setDismissed(true)
+            },
+          },
+        ],
       })
     }
     return { hints, groups }
   }, [
     activeDef,
+    allowText,
     asyncOptions,
     consumeWord,
     context,
     defs,
     list.filters,
-    needle.value,
+    list.q,
     onOpenFilter,
+    parsed.text,
     prefixValues,
     replaceToken,
     setText,
     showFilters,
     onSelectView,
+    typedText,
     views,
     word,
   ])
@@ -527,8 +564,49 @@ export function useFilterSearch({
   )
   const open =
     focused && !dismissed && (selectable.length > 0 || hints.length > 0)
-  const activeIndex = highlight < selectable.length ? highlight : -1
+  // Once something is typed the top match is highlighted, so Enter picks it.
+  const autoHighlight = typedText !== "" && selectable.length > 0
+  const activeIndex =
+    highlight >= 0 && highlight < selectable.length
+      ? highlight
+      : autoHighlight
+        ? 0
+        : -1
   const optionId = (index: number) => `${listboxId}-option-${index}`
+  // The typed word has suggestions on show: hold the free text back, the user
+  // is most likely about to pick one.
+  const suggesting = open && word !== "" && selectable.length > 0
+
+  // Free text commits after a pause, or at once when the list was just closed
+  // (Escape, "Search for"); a finished qualifier (caret moved past it) at
+  // once. Qualifiers that don't parse stay in the box, with a warning, and
+  // never hold the valid ones back.
+  React.useEffect(() => {
+    if (!focused || editingQualifier) return
+    const typed = Object.keys(parsed.filters).length > 0
+    const search = allowText && !suggesting
+    if (!typed && (!search || (parsed.text || undefined) === list.q)) return
+    const timer = window.setTimeout(
+      () => {
+        // Typed on since this was scheduled: the next run commits that instead.
+        if (inputRef.current && inputRef.current.value !== draft) return
+        commit(draft, { search })
+      },
+      typed || dismissed ? 0 : debounceMs
+    )
+    return () => window.clearTimeout(timer)
+  }, [
+    allowText,
+    commit,
+    debounceMs,
+    dismissed,
+    draft,
+    editingQualifier,
+    focused,
+    list.q,
+    parsed,
+    suggesting,
+  ])
 
   const warnings = React.useMemo(() => {
     const messages: string[] = []
@@ -561,17 +639,6 @@ export function useFilterSearch({
       event.preventDefault()
       setDismissed(true)
       onFocusLastChip()
-      return
-    }
-    // Arrows act on the list: first catch it up with what was typed.
-    if (
-      needle.pending &&
-      (event.key === "ArrowDown" || event.key === "ArrowUp")
-    ) {
-      event.preventDefault()
-      needle.flush()
-      setDismissed(false)
-      setHighlight(0)
       return
     }
     if (!open && event.key === "ArrowDown" && selectable.length > 0) {

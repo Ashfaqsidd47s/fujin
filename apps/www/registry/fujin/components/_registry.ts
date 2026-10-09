@@ -214,10 +214,11 @@ const table = useDataTable({
           "Server-mode columns are not sortable unless they set `meta.sortField` (or `enableSorting: true`) - most APIs only sort on some fields.",
           'Changing the search or filters clears the selection and returns to page 1, because "Select all N" would otherwise quietly mean a different set of rows. Sorting keeps the selection.',
           "Define `columns`, `filters` and `views` outside the component (or memoize them): new arrays every render re-run filtering and reset derived state.",
+          'Free text waits while the typed word has suggestions (the user is most likely picking a filter) and searches once nothing matches, on Escape, on blur or from "Search for" at the end of the list - so a table whose rows are all named after filter values searches less eagerly than you might expect.',
           "Saved views without `savedViews`/`onSavedViewsChange` live in this browser only (localStorage under `tableId`); without either, the Save button is hidden.",
         ],
         a11y: [
-          "The search box is an ARIA 1.2 combobox: focus stays in the input, arrows move through suggestions (announced via aria-activedescendant), Enter picks, Escape closes then clears.",
+          'The search box is an ARIA 1.2 combobox: focus stays in the input, typing highlights the top suggestion and arrows move through them (announced via aria-activedescendant), Enter picks, Escape closes then clears. A filter picked from the list opens with an "All filters" back button.',
           "Chips are buttons: Enter opens the picker with current values checked, Delete/Backspace removes, Left/Right move between chips and back into the box; Backspace at the start of the box moves into the chips.",
           'Chips that no longer fit fold into one "N filters" pill (a popover trigger) instead of wrapping the bar: its chips keep the same keys, and focus follows the chip it was on to the pill and back when the bar folds or unfolds.',
           'A visually hidden `role="status"` announces the result count after a search or filter, and the bulk-action bar announces the selection count.',

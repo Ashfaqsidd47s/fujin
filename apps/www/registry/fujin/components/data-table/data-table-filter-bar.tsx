@@ -189,6 +189,14 @@ function DataTableFilterBar<TData extends RowData>({
     else filterSearch.focus()
   }, [collapsed, filterSearch])
 
+  // A filter picked from the search box: its picker's back button returns to
+  // the list of every filter, with the box focused.
+  const backToFilterList = () => {
+    setOpenKey(null)
+    setOverflowOpen(false)
+    filterSearch.focus({ open: true })
+  }
+
   const removeFolded = (key: string) => {
     if (openKey === key) setOpenKey(null)
     setFilter(key, undefined)
@@ -284,11 +292,16 @@ function DataTableFilterBar<TData extends RowData>({
                   }
                   setOpenKey(null)
                 }}
-                onBack={() => {
-                  setReturnToInput(false)
-                  setOverflowOpen(true)
-                  setOpenKey(null)
-                }}
+                {...(returnToInput && !overflowOpen
+                  ? { onBack: backToFilterList, backLabel: "All filters" }
+                  : {
+                      onBack: () => {
+                        setReturnToInput(false)
+                        setOverflowOpen(true)
+                        setOpenKey(null)
+                      },
+                      backLabel: "Applied filters",
+                    })}
                 onChange={setFilter}
                 onRemove={removeFolded}
                 onAddFilter={
@@ -330,6 +343,7 @@ function DataTableFilterBar<TData extends RowData>({
                   onChange={(value) => setFilter(def.key, value)}
                   onRemove={() => removeChip(index)}
                   onNavigate={(direction) => focusChip(index + direction)}
+                  onBack={returnToInput ? backToFilterList : undefined}
                   // A picker folded into the pill mid-edit reopens there with
                   // focus; the chip it leaves must not pull focus back out.
                   finalFocus={() =>
@@ -427,13 +441,20 @@ function SuggestionList({
         </div>
       ))}
       {search.groups.map((group) => (
-        <div key={group.id} role="group" aria-label={group.heading}>
-          <div
-            aria-hidden
-            className="px-2 pt-1.5 pb-1 text-xs font-medium text-muted-foreground"
-          >
-            {group.heading}
-          </div>
+        <div
+          key={group.id}
+          role="group"
+          aria-label={group.heading}
+          className={cn(group.id === "search" && "mt-1 border-t pt-1")}
+        >
+          {group.id === "search" ? null : (
+            <div
+              aria-hidden
+              className="px-2 pt-1.5 pb-1 text-xs font-medium text-muted-foreground"
+            >
+              {group.heading}
+            </div>
+          )}
           {group.items.map((item) => (
             <SuggestionOption key={item.id} item={item} search={search} />
           ))}
@@ -469,6 +490,16 @@ function SuggestionOption({
         <span className="truncate">{item.def.label}</span>
       ) : item.kind === "view" ? (
         <span className="truncate">{item.view.label}</span>
+      ) : item.kind === "search" ? (
+        <>
+          <SearchIcon
+            aria-hidden
+            className="size-4 shrink-0 text-muted-foreground"
+          />
+          <span className="min-w-0 truncate">
+            Search for <span className="font-medium">“{item.text}”</span>
+          </span>
+        </>
       ) : (
         <span className="min-w-0 truncate">
           {item.def.label} {item.negated ? "is not" : "is"}{" "}

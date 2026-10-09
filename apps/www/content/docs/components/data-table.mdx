@@ -116,21 +116,27 @@ row.vendor)` builds enum options with counts.
 
 It works like the search bar in the Shopify admin's Products and Orders pages:
 
-- **Focus** lists the filters. Pick one and its chip opens with the picker.
+- **Focus** lists the filters. Pick one and its chip opens with the picker;
+  its **All filters** button goes back to the list.
 - **Type** to get matching filters and values. "dr" offers **Status is
-  Draft**, and a view whose name matches the text is offered as well.
+  Draft**, and a view whose name matches the text is offered as well. The
+  top match is highlighted, so Enter picks it. When nothing matches, no list
+  opens.
 - **Chips** read "Status is Active, Draft". Click one to edit it; Delete or
   Backspace removes it. ← and → move between chips and back into the box.
 - **The bar stays one line tall.** When the chips no longer leave room to
   type, they fold into one **3 filters** pill. It opens every chip in a
   popover: click one to edit it there, × removes it, and **Add filter** and
   **Clear all** sit at the bottom. The chips unfold once they fit again.
-- **Suggestions and picker options** narrow once typing pauses (250 ms),
-  not on every key. The arrow keys and Enter catch the list up first, so a
-  quick Enter still picks what you typed.
+- **Suggestions** narrow on every key. Picker options narrow once typing
+  pauses (250 ms); the arrow keys and Enter catch them up first, so a quick
+  Enter still picks what you typed.
 - **Free text** searches after a pause (`search.debounceMs`, default 300 ms),
-  or on Enter. In client mode every word must appear somewhere in the row;
-  `"quoted phrases"` stay together.
+  but only once the typed word has no suggestions: while it does, you are
+  most likely picking a filter. To search text that matches a filter, pick
+  **Search for "…"** at the end of the list, or press Escape. In client mode
+  every word must appear somewhere in the row; `"quoted phrases"` stay
+  together.
 - **ⓧ** returns to the selected view's own query.
 
 GitHub-style qualifiers work too. They turn into chips when you type a space
@@ -314,8 +320,9 @@ selection descriptor.
 
 ## Accessibility
 
-- The search box is an ARIA combobox. Arrow keys move through suggestions,
-  Enter picks one, and Escape closes the list, then clears the text.
+- The search box is an ARIA combobox. Typing highlights the top suggestion,
+  arrow keys move through them, Enter picks one, and Escape closes the list
+  (searching the text), then clears the text.
 - Chips, header menus, pickers and the sort and columns panel all work from
   the keyboard. Columns reorder with buttons, never by dragging only.
 - A hidden status region announces the result count after a search or
